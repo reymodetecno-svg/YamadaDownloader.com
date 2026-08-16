@@ -37,61 +37,6 @@ export default async function handler(request) {
     const result = data.result;
     const rawMedias = Array.isArray(result.medias) ? result.medias : [];
     const medias = rawMedias.filter(item => item?.url);
-
-    if (shouldDownload) {
-      const media = medias[mediaIndex];
-
-      if (!media?.url) {
-        return Response.json({ error: "Format media yang dipilih tidak tersedia." }, { status: 422 });
-      }
-
-      const mediaResponse = await fetch(media.url, {
-        headers: {
-          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-          "Accept": "*/*",
-          "Referer": (result.source || "").toLowerCase().includes("tiktok")
-            ? "https://www.tiktok.com/"
-            : (result.source || "").toLowerCase().includes("instagram")
-              ? "https://www.instagram.com/"
-              : (result.source || "").toLowerCase().includes("youtube")
-                ? "https://www.youtube.com/"
-                : ""
-        }
-      });
-
-      if (!mediaResponse.ok || !mediaResponse.body) {
-        let hostInfo = "";
-        try { hostInfo = new URL(media.url).host; } catch {}
-        return Response.json(
-          { error: `Gagal mengambil file media (${mediaResponse.status}) dari ${hostInfo || "sumber tidak diketahui"}. Link dari API downloader mungkin sudah tidak valid.` },
-          { status: 502 }
-        );
-      }
-
-      const extension = media.extension || (media.type === "audio" ? "mp3" : "mp4");
-
-      const title = String(result.title || "YamadaDownloader")
-        .replace(/[<>:"/\\|?*\x00-\x1F]/g, "")
-        .replace(/\s+/g, " ")
-        .trim()
-        .slice(0, 100) || "YamadaDownloader";
-
-      const filename = `${title}.${extension}`;
-
-      // Stream langsung dari sumber ke browser, tanpa buffer di server
-      // -> nggak kena limit ukuran response, cocok buat file besar (YouTube/Instagram)
-      return new Response(mediaResponse.body, {
-        status: 200,
-        headers: {
-          "Content-Type":
-            mediaResponse.headers.get("content-type") ||
-            (extension === "mp3" ? "audio/mpeg" : "video/mp4"),
-          "Content-Disposition": `attachment; filename="${filename.replace(/"/g, "")}"`,
-          "Cache-Control": "no-store"
-        }
-      });
-    }
-
     const picker = medias.map((item, index) => ({
       url: item.url,
       type: item.type === "audio" ? "Audio" : `Video ${item.quality || index + 1}`,
