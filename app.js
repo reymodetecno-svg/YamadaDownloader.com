@@ -297,6 +297,57 @@ function initPWA(){
   });
 }
 
+function initDeviceStatus(){
+  const typeEl = $("#deviceType");
+  const statusEl = $("#deviceBatteryStatus");
+  const percentEl = $("#deviceBatteryPercent");
+  const fillEl = $("#deviceBatteryFill");
+
+  if (!typeEl) return;
+
+  // Deteksi jenis perangkat dari user agent
+  const ua = navigator.userAgent || "";
+  let deviceLabel = "Desktop";
+  if (/iPad|Tablet/i.test(ua) || (/Android/i.test(ua) && !/Mobile/i.test(ua))) {
+    deviceLabel = "Tablet";
+  } else if (/Mobi|Android|iPhone/i.test(ua)) {
+    deviceLabel = "Handphone";
+  }
+  typeEl.textContent = deviceLabel;
+
+  function updateBattery(battery){
+    const percent = Math.round(battery.level * 100);
+
+    if (percentEl) percentEl.textContent = `${percent}%`;
+    if (fillEl) {
+      fillEl.style.width = `${percent}%`;
+      fillEl.classList.remove("low", "medium");
+      if (percent <= 20) fillEl.classList.add("low");
+      else if (percent <= 50) fillEl.classList.add("medium");
+    }
+    if (statusEl) {
+      statusEl.textContent = battery.charging
+        ? `${percent}% • Sedang mengisi daya`
+        : `${percent}% • Tidak mengisi daya`;
+    }
+  }
+
+  if (navigator.getBattery) {
+    navigator.getBattery()
+      .then(battery => {
+        updateBattery(battery);
+        battery.addEventListener("levelchange", () => updateBattery(battery));
+        battery.addEventListener("chargingchange", () => updateBattery(battery));
+      })
+      .catch(() => {
+        if (statusEl) statusEl.textContent = "Info baterai tidak tersedia.";
+      });
+  } else {
+    if (percentEl) percentEl.textContent = "N/A";
+    if (statusEl) statusEl.textContent = "Browser ini tidak mendukung info baterai.";
+  }
+}
+
 document.addEventListener("DOMContentLoaded", () => {
 
   // =========================
@@ -477,6 +528,13 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
   }
+
+
+  // =========================
+  // DEVICE STATUS
+  // =========================
+
+  initDeviceStatus();
 
 
   // =========================
