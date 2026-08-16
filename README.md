@@ -7,7 +7,7 @@ Template website downloader dengan desain putih + biru muda, splash/loading, ban
 - `index.html` — tampilan utama
 - `style.css` — desain
 - `app.js` — navigasi, UI downloader, PWA
-- `netlify/functions/download.mjs` — proxy aman ke API downloader
+- `api/download.mjs` — proxy aman ke API downloader
 - `assets/banner-placeholder.svg` — ganti dengan banner sendiri
 - `assets/logo.svg` — ganti dengan logo sendiri
 - `manifest.webmanifest` + `sw.js` — supaya bisa di-install sebagai PWA
