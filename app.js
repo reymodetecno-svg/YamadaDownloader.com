@@ -190,20 +190,29 @@ function renderDownloadResult(data){
   });
 }
 
-async function downloadSelectedMedia(originalUrl, mediaIndex, title, extension, button){
+async function downloadSelectedMedia(
+  originalUrl,
+  mediaIndex,
+  title,
+  extension,
+  button
+){
   if(!originalUrl){
     showToast("Link video tidak ditemukan.");
     return;
   }
 
   const originalLabel = button.innerHTML;
+
   button.disabled = true;
   button.innerHTML = "<span>⏳ Memproses...</span>";
 
   try{
     const response = await fetch(CONFIG.downloadEndpoint, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json"
+      },
       body: JSON.stringify({
         url: originalUrl,
         download: true,
@@ -211,36 +220,43 @@ async function downloadSelectedMedia(originalUrl, mediaIndex, title, extension, 
       })
     });
 
+    const data = await response.json().catch(() => ({}));
+
     if(!response.ok){
-      const errData = await response.json().catch(() => ({}));
-      throw new Error(errData.error || `HTTP ${response.status}`);
+      throw new Error(
+        data.error || `HTTP ${response.status}`
+      );
     }
 
-    const blob = await response.blob();
-    if(!blob || blob.size === 0) throw new Error("File kosong.");
+    if(!data.url){
+      throw new Error("URL download tidak diberikan API.");
+    }
 
-    const blobUrl = URL.createObjectURL(blob);
-    const filename = `${String(title).replace(/[<>:"/\\|?*]/g, "").trim()}.${extension}`;
-
+    /*
+     * PENTING:
+     * Jangan fetch URL googlevideo.com dari Vercel.
+     * Browser langsung membuka URL media.
+     */
     const link = document.createElement("a");
-    link.href = blobUrl;
-    link.download = filename;
-    link.style.display = "none";
+
+    link.href = data.url;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
 
     document.body.appendChild(link);
     link.click();
     link.remove();
 
-    setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
-
-    showToast("✔ Video berhasil didownload!");
+    showToast("✔ Download dimulai!");
   }catch(error){
     console.error("Download error:", error);
+
     showToast(`Gagal: ${error.message}`);
   }finally{
     button.disabled = false;
     button.innerHTML = originalLabel;
   }
+}
 }
 
 function escapeHtml(value){
