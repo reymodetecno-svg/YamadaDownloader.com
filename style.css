@@ -305,3 +305,27 @@ body.dark-mode .splash{
 body.dark-mode .loader{
   background:#263744;
 }
+
+/* FIX: splash tidak boleh menghalangi klik setelah selesai */
+#splash.hide {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  display: none !important;
+}
+
+/* Pastikan halaman dan navigasi bisa menerima sentuhan */
+.app-shell,
+#app,
+.bottom-nav {
+  pointer-events: auto;
+}
+
+.tool-card,
+.nav-item,
+button,
+a,
+input {
+  pointer-events: auto;
+  touch-action: manipulation;
+}
