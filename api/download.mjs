@@ -1,17 +1,20 @@
-export default async function handler(req, res) {
-  if (req.method !== "POST") {
-    res.status(405).json({ error: "Method not allowed" });
-    return;
+export const config = { runtime: "edge" };
+
+export default async function handler(request) {
+  if (request.method !== "POST") {
+    return Response.json({ error: "Method not allowed" }, { status: 405 });
   }
 
-  const body = req.body || {};
-  const url = String(body.url || "").trim();
-  const shouldDownload = body.download === true;
-  const mediaIndex = Number.isInteger(body.mediaIndex) ? body.mediaIndex : 0;
+  let body;
+  try { body = await request.json(); }
+  catch { return Response.json({ error: "Request JSON tidak valid." }, { status: 400 }); }
+
+  const url = String(body?.url || "").trim();
+  const shouldDownload = body?.download === true;
+  const mediaIndex = Number.isInteger(body?.mediaIndex) ? body.mediaIndex : 0;
 
   if (!/^https?:\/\//i.test(url)) {
-    res.status(400).json({ error: "URL video tidak valid." });
-    return;
+    return Response.json({ error: "URL video tidak valid." }, { status: 400 });
   }
 
   const apiBase = process.env.DOWNLOADER_API_URL || "https://api.nexray.eu.cc/downloader/aio";
@@ -25,12 +28,10 @@ export default async function handler(req, res) {
     const data = await upstream.json().catch(() => null);
 
     if (!upstream.ok) {
-      res.status(502).json({ error: data?.message || data?.error || `Nexray API error (${upstream.status})` });
-      return;
+      return Response.json({ error: data?.message || data?.error || `Nexray API error (${upstream.status})` }, { status: 502 });
     }
     if (!data?.status || !data?.result) {
-      res.status(422).json({ error: data?.message || "API tidak menemukan media dari link tersebut." });
-      return;
+      return Response.json({ error: data?.message || "API tidak menemukan media dari link tersebut." }, { status: 422 });
     }
 
     const result = data.result;
@@ -41,8 +42,7 @@ export default async function handler(req, res) {
       const media = medias[mediaIndex];
 
       if (!media?.url) {
-        res.status(422).json({ error: "Format media yang dipilih tidak tersedia." });
-        return;
+        return Response.json({ error: "Format media yang dipilih tidak tersedia." }, { status: 422 });
       }
 
       const mediaResponse = await fetch(media.url, {
@@ -62,10 +62,10 @@ export default async function handler(req, res) {
       if (!mediaResponse.ok || !mediaResponse.body) {
         let hostInfo = "";
         try { hostInfo = new URL(media.url).host; } catch {}
-        res.status(502).json({
-          error: `Gagal mengambil file media (${mediaResponse.status}) dari ${hostInfo || "sumber tidak diketahui"}. Link dari API downloader mungkin sudah tidak valid.`
-        });
-        return;
+        return Response.json(
+          { error: `Gagal mengambil file media (${mediaResponse.status}) dari ${hostInfo || "sumber tidak diketahui"}. Link dari API downloader mungkin sudah tidak valid.` },
+          { status: 502 }
+        );
       }
 
       const extension = media.extension || (media.type === "audio" ? "mp3" : "mp4");
@@ -78,19 +78,16 @@ export default async function handler(req, res) {
 
       const filename = `${title}.${extension}`;
 
-      // Node.js runtime tidak bisa langsung pipe web-stream ke res,
-      // jadi kita buffer dulu isi filenya baru dikirim.
-      const arrayBuffer = await mediaResponse.arrayBuffer();
-      const buffer = Buffer.from(arrayBuffer);
-
-      res.setHeader(
-        "Content-Type",
-        mediaResponse.headers.get("content-type") || (extension === "mp3" ? "audio/mpeg" : "video/mp4")
-      );
-      res.setHeader("Content-Disposition", `attachment; filename="${filename.replace(/"/g, "")}"`);
-      res.setHeader("Cache-Control", "no-store");
-      res.status(200).send(buffer);
-      return;
+      return new Response(mediaResponse.body, {
+        status: 200,
+        headers: {
+          "Content-Type":
+            mediaResponse.headers.get("content-type") ||
+            (extension === "mp3" ? "audio/mpeg" : "video/mp4"),
+          "Content-Disposition": `attachment; filename="${filename.replace(/"/g, "")}"`,
+          "Cache-Control": "no-store"
+        }
+      });
     }
 
     const picker = medias.map((item, index) => ({
@@ -103,12 +100,10 @@ export default async function handler(req, res) {
     }));
 
     if (!picker.length) {
-      res.status(422).json({ error: "API berhasil dipanggil tetapi tidak ada media download." });
-      return;
+      return Response.json({ error: "API berhasil dipanggil tetapi tidak ada media download." }, { status: 422 });
     }
 
-    res.setHeader("Cache-Control", "no-store");
-    res.status(200).json({
+    return Response.json({
       status: "picker",
       source: result.source || "unknown",
       title: result.title || "Video",
@@ -116,9 +111,4 @@ export default async function handler(req, res) {
       author: result.author || "",
       duration: result.duration || 0,
       picker
-    });
-  } catch (error) {
-    res.status(502).json({ error: `Tidak dapat terhubung ke Nexray API: ${error.message}` });
-  }
-}
-
+    }, { status: 200, headers: {
