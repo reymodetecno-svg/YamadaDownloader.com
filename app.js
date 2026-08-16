@@ -1,7 +1,7 @@
 const CONFIG = {
   whatsappChannel: "https://whatsapp.com/channel/0029Vb87O3oF6smw9uLgOD0U",
   customerService: "https://wa.me/6283869485575",
-  // Netlify Function akan membaca DOWNLOADER_API_URL dari environment.
+  // Vercel Function akan membaca DOWNLOADER_API_URL dari environment.
   downloadEndpoint: "/api/download"
 };
 
