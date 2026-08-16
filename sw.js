@@ -1,4 +1,4 @@
-const CACHE = "yamada-downloader-v2";
+const CACHE = "yamada-downloader-v3";
 
 const ASSETS = [
   "/",
@@ -7,6 +7,7 @@ const ASSETS = [
   "/app.js",
   "/LOGO.jpg",
   "/banner.mp4",
+  "/logo.svg",
   "/manifest.webmanifest"
 ];
 
@@ -14,8 +15,8 @@ self.addEventListener("install", event => {
   event.waitUntil(
     caches.open(CACHE)
       .then(cache => cache.addAll(ASSETS))
-      .catch(error => {
-        console.error("Cache install gagal:", error);
+      .catch(err => {
+        console.error("Cache error:", err);
       })
   );
 
@@ -30,10 +31,8 @@ self.addEventListener("activate", event => {
           .filter(key => key !== CACHE)
           .map(key => caches.delete(key))
       )
-    )
+    ).then(() => self.clients.claim())
   );
-
-  self.clients.claim();
 });
 
 self.addEventListener("fetch", event => {
@@ -42,17 +41,18 @@ self.addEventListener("fetch", event => {
   event.respondWith(
     fetch(event.request)
       .then(response => {
-        const copy = response.clone();
+        if (response.ok) {
+          const copy = response.clone();
 
-        caches.open(CACHE).then(cache => {
-          cache.put(event.request, copy);
-        });
+          caches.open(CACHE).then(cache => {
+            cache.put(event.request, copy);
+          });
+        }
 
         return response;
       })
       .catch(() => {
-        return caches.match(event.request)
-          .then(cached => cached || caches.match("/index.html"));
+        return caches.match(event.request);
       })
   );
 });
