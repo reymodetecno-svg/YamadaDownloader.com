@@ -1,3 +1,20 @@
+// Bersihkan Service Worker/cache versi lama
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.getRegistrations()
+    .then(registrations => {
+      registrations.forEach(reg => reg.unregister());
+    })
+    .catch(() => {});
+
+  if ("caches" in window) {
+    caches.keys()
+      .then(keys => {
+        keys.forEach(key => caches.delete(key));
+      })
+      .catch(() => {});
+  }
+}
+
 const CONFIG = {
   whatsappChannel: "https://whatsapp.com/channel/0029Vb87O3oF6smw9uLgOD0U",
   customerService: "https://wa.me/6283869485575",
