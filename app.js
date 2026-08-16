@@ -282,6 +282,7 @@ function initPWA(){
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  document.body.classList.add("app-ready");
 
   // Hilangkan splash dan pastikan tidak menutupi halaman
   const splash = $("#splash");
