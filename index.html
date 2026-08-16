@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#eaf6ff">
+  <meta name="description" content="YamadaDownloader - download video dari TikTok, Instagram, dan YouTube.">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="LOGO.jpg">
+  <link rel="stylesheet" href="/style.css">
+  <title>YamadaDownloader</title>
+</head>
+<body>
+  <div id="splash" class="splash">
+    <div class="splash-logo">
+      <img src="LOGO.jpg" alt="YamadaDownloader">
+    </div>
+    <div class="loader"><span></span></div>
+    <p>YamadaDownloader</p>
+  </div>
+
+  <div id="waNotice" class="wa-notice">
+    <div class="wa-icon">◔</div>
+    <div class="wa-copy">
+      <strong>Saluran WhatsApp</strong>
+      <span>Ikuti channel kami untuk info terbaru.</span>
+    </div>
+    <a id="waLink" href="#" target="_blank" rel="noopener">Gabung</a>
+    <button id="closeNotice" aria-label="Tutup">×</button>
+  </div>
+
+  <div class="app-shell">
+    <header class="topbar">
+  <a class="brand" href="#home" data-page="home">
+    <img src="LOGO.jpg" alt="" class="brand-logo">
+    <span>Yamada<span>Downloader</span></span>
+  </a>
+
+  <div class="topbar-actions">
+    <button class="theme-toggle" id="themeToggle" type="button" aria-label="Ganti tema">
+      <span id="themeIcon">☀️</span>
+    </button>
+
+    <button class="install-btn" id="installBtn" hidden>Install App</button>
+  </div>
+</header>
+
+    <main id="app">
+      <section class="page active" data-route="home">
+        <div class="hero">
+          <video autoplay muted loop playsinline preload="metadata">
+          <source src="banner.mp4" type="video/mp4">
+          </video>
+      
+        </div>
+
+        <section class="profile-card">
+          <div class="avatar">Y</div>
+          <div class="profile-main">
+            <strong>YamadaDownloader</strong>
+            <span>Media downloader</span>
+          </div>
+          <div class="profile-stats">
+            <span><b>24/7</b> Service</span>
+            <span><b>Fast</b> Download</span>
+          </div>
+        </section>
+
+        <div class="section-head">
+          <div>
+            <span class="eyebrow">TOOLS</span>
+            <h2>Download sekarang</h2>
+          </div>
+          <span class="online"><i></i> Online</span>
+        </div>
+
+        <div class="tool-grid">
+          <button class="tool-card" data-tool="youtube">
+            <span class="tool-icon youtube">▶</span>
+            <strong>YouTube</strong>
+            <small>Video & Shorts</small>
+            <span class="arrow">→</span>
+          </button>
+          <button class="tool-card" data-tool="tiktok">
+            <span class="tool-icon tiktok">♪</span>
+            <strong>TikTok</strong>
+            <small>Video tanpa ribet</small>
+            <span class="arrow">→</span>
+          </button>
+          <button class="tool-card" data-tool="instagram">
+            <span class="tool-icon instagram">◎</span>
+            <strong>Instagram</strong>
+            <small>Reels & video</small>
+            <span class="arrow">→</span>
+          </button>
+        </div>
+
+        <section class="credits">
+          <span class="eyebrow">CREDITS</span>
+          <h2>YamadaDownloader</h2>
+          <p>Website developed by JustReyy
+            Powered by YamadaDownloader
+           .</p>
+          <div class="credit-pills">
+            <span>✦ JustReyy</span>
+            <span>✦ JustReyy</span>
+            <span>✦ JustReyy</span>
+          </div>
+        </section>
+
+        <section class="info-strip">
+          <div>✓ Gratis digunakan</div>
+          <div>✓ Mobile friendly</div>
+          <div>✓ Install sebagai aplikasi</div>
+        </section>
+      </section>
+
+      <section class="page" data-route="tool">
+        <button class="back-btn" data-page="home">← Kembali</button>
+        <div class="download-head">
+          <span id="toolBigIcon" class="tool-icon big">▶</span>
+          <div>
+            <span class="eyebrow">DOWNLOADER</span>
+            <h1 id="toolTitle">YouTube Downloader</h1>
+            <p id="toolDescription">Masukkan link video yang ingin kamu simpan.</p>
+          </div>
+        </div>
+
+        <div class="download-box">
+          <label for="videoUrl">URL VIDEO</label>
+          <div class="input-wrap">
+            <input id="videoUrl" type="url" inputmode="url" autocomplete="off"
+                   placeholder="https://..." aria-label="URL video">
+            <button id="pasteBtn" type="button">Paste</button>
+          </div>
+          <button id="downloadBtn" class="primary-btn" type="button">
+            <span>↓</span> Download Video
+          </button>
+          <p class="helper">Gunakan link konten publik yang kamu punya hak untuk simpan.</p>
+        </div>
+
+        <div id="resultBox" class="result-box" hidden></div>
+
+        <div class="supported">
+          <span>SUPPORTED</span>
+          <div><b>YT</b> YouTube</div>
+          <div><b>TT</b> TikTok</div>
+          <div><b>IG</b> Instagram</div>
+        </div>
+      </section>
+
+      <section class="page" data-route="profile">
+        <div class="page-title">
+          <span class="eyebrow">PROFILE</span>
+          <h1>YAMADADONWLOADER</h1>
+          <p>informasi YamadaDownloade.</p>
+        </div>
+        <div class="settings-card">
+          <div class="setting-row"><span>Nama website</span><strong>YamadaDownloader</strong></div>
+          <div class="setting-row"><span>Status</span><strong class="green">● Online</strong></div>
+          <div class="setting-row"><span>Versi</span><strong>1.0.0</strong></div>
+        </div>
+        <div class="settings-card">
+          <h3>INFORMASI</h3>
+          <p>Untuk update akan di infornasikan di saluran.</p>
+        </div>
+      </section>
+
+      <section class="page" data-route="support">
+        <div class="page-title">
+          <span class="eyebrow">HELP CENTER</span>
+          <h1>Customer Service</h1>
+          <p>Butuh bantuan atau ingin melaporkan link yang bermasalah?</p>
+        </div>
+        <div class="support-card">
+          <div class="support-icon">✦</div>
+          <h2>Hubungi kami</h2>
+          <p>Hubungi kami atau tanya ai yamada jika ada bug atau lainnya.</p>
+          <a class="primary-btn link-btn" id="csLink" href="#" target="_blank" rel="noopener">Buka Customer Service</a>
+        </div>
+      </section>
+    </main>
+
+    <nav class="bottom-nav" aria-label="Navigasi utama">
+      <button class="nav-item active" data-page="home"><span>⌂</span><small>Beranda</small></button>
+      <button class="nav-item" data-page="profile"><span>♙</span><small>Akun</small></button>
+      <button class="nav-item" data-page="support"><span>●</span><small>CS</small></button>
+    </nav>
+  </div>
+
+  <div id="toast" class="toast" role="status"></div>
+  <script src="/app.js"></script>
+</body>
+</html>
