@@ -329,3 +329,41 @@ input {
   pointer-events: auto;
   touch-action: manipulation;
 }
+
+/* =========================
+   CLICK FIX
+========================= */
+
+html,
+body {
+  position: relative;
+  z-index: 0;
+}
+
+.app-shell {
+  position: relative;
+  z-index: 1;
+}
+
+main,
+.page,
+.tool-grid,
+.tool-card,
+.nav-item,
+button,
+a,
+input {
+  pointer-events: auto;
+}
+
+.bottom-nav {
+  z-index: 9999;
+}
+
+.wa-notice {
+  z-index: 10000;
+}
+
+.toast {
+  z-index: 10001;
+}
