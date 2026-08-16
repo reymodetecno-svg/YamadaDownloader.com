@@ -299,24 +299,194 @@ function initPWA(){
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  document.body.classList.add("app-ready");
 
-  // Hilangkan splash dan pastikan tidak menutupi halaman
-  const splash = $("#splash");
+  // =========================
+  // WHATSAPP NOTICE
+  // =========================
 
-  if (splash) {
-    setTimeout(() => {
-      splash.classList.add("hide");
+  const notice = $("#waNotice");
+  const waLink = $("#waLink");
+  const csLink = $("#csLink");
 
-      // Pastikan benar-benar tidak menerima klik
-      splash.style.pointerEvents = "none";
-
-      setTimeout(() => {
-        splash.style.display = "none";
-      }, 500);
-
-    }, 1200);
+  if (waLink) {
+    waLink.href = CONFIG.whatsappChannel;
   }
+
+  if (csLink) {
+    csLink.href = CONFIG.customerService;
+  }
+
+  if (notice) {
+    setTimeout(() => notice.classList.add("show"), 1000);
+    setTimeout(() => notice.classList.remove("show"), 6000);
+  }
+
+  const closeNotice = $("#closeNotice");
+
+  if (closeNotice) {
+    closeNotice.addEventListener("click", () => {
+      notice?.classList.remove("show");
+    });
+  }
+
+
+  // =========================
+  // NAVIGASI
+  // =========================
+
+  document.querySelectorAll(".nav-item").forEach(button => {
+
+    button.addEventListener("click", () => {
+
+      const page = button.dataset.page;
+
+      if (!page) return;
+
+      setPage(page);
+
+    });
+
+  });
+
+
+  // =========================
+  // TOOL DOWNLOADER
+  // =========================
+
+  document.querySelectorAll(".tool-card").forEach(card => {
+
+    card.addEventListener("click", () => {
+
+      const tool = card.dataset.tool;
+
+      if (!tool) return;
+
+      openTool(tool);
+
+    });
+
+  });
+
+
+  // =========================
+  // BACK BUTTON
+  // =========================
+
+  document.querySelectorAll("[data-page]").forEach(button => {
+
+    button.addEventListener("click", () => {
+
+      const page = button.dataset.page;
+
+      if (page) {
+        setPage(page);
+      }
+
+    });
+
+  });
+
+
+  // =========================
+  // PASTE
+  // =========================
+
+  const pasteBtn = $("#pasteBtn");
+
+  if (pasteBtn) {
+    pasteBtn.addEventListener("click", pasteUrl);
+  }
+
+
+  // =========================
+  // DOWNLOAD
+  // =========================
+
+  const downloadBtn = $("#downloadBtn");
+
+  if (downloadBtn) {
+    downloadBtn.addEventListener("click", downloadVideo);
+  }
+
+
+  const videoUrl = $("#videoUrl");
+
+  if (videoUrl) {
+
+    videoUrl.addEventListener("keydown", event => {
+
+      if (event.key === "Enter") {
+        downloadVideo();
+      }
+
+    });
+
+  }
+
+
+  // =========================
+  // THEME
+  // =========================
+
+  const themeToggle = $("#themeToggle");
+  const themeIcon = $("#themeIcon");
+
+  let savedTheme = null;
+
+  try {
+    savedTheme = localStorage.getItem("theme");
+  } catch {}
+
+  if (savedTheme === "dark") {
+
+    document.body.classList.add("dark-mode");
+
+    if (themeIcon) {
+      themeIcon.textContent = "🌙";
+    }
+
+  } else {
+
+    document.body.classList.remove("dark-mode");
+
+    if (themeIcon) {
+      themeIcon.textContent = "☀️";
+    }
+
+  }
+
+
+  if (themeToggle) {
+
+    themeToggle.addEventListener("click", () => {
+
+      document.body.classList.toggle("dark-mode");
+
+      const dark = document.body.classList.contains("dark-mode");
+
+      try {
+        localStorage.setItem(
+          "theme",
+          dark ? "dark" : "light"
+        );
+      } catch {}
+
+      if (themeIcon) {
+        themeIcon.textContent = dark ? "🌙" : "☀️";
+      }
+
+    });
+
+  }
+
+
+  // =========================
+  // PWA
+  // =========================
+
+  initPWA();
+
+});
 
   const notice = $("#waNotice");
   
