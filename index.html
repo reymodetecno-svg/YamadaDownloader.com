@@ -39,8 +39,6 @@
   <div class="topbar-actions">
     <button class="theme-toggle" id="themeToggle" type="button" aria-label="Ganti tema">
       <span id="themeIcon">☀️</span>
-    </button>
-
     <button class="install-btn" id="installBtn" hidden>Install App</button>
   </div>
 </header>
@@ -189,6 +187,17 @@
   </div>
 
   <div id="toast" class="toast" role="status"></div>
-  <script src="/app.js"></script>
+ <script>
+  // Pengaman agar splash tidak pernah stuck
+  setTimeout(() => {
+    const splash = document.getElementById("splash");
+
+    if (splash) {
+      splash.classList.add("hide");
+    }
+  }, 1500);
+</script>
+
+<script src="/app.js"></script>
 </body>
 </html>
