@@ -50,6 +50,20 @@ export default async function handler(request) {
       return Response.json({ error: "API berhasil dipanggil tetapi tidak ada media download." }, { status: 422 });
     }
 
+    // Jika ini permintaan "download" untuk satu format terpilih,
+    // balas dengan URL media langsung, bukan daftar picker lagi.
+    if (shouldDownload) {
+      const chosen = picker[mediaIndex];
+      if (!chosen || !chosen.url) {
+        return Response.json({ error: "Format yang dipilih tidak ditemukan." }, { status: 422 });
+      }
+      return Response.json({
+        url: chosen.url,
+        extension: chosen.extension,
+        title: result.title || "Video"
+      }, { status: 200, headers: { "Cache-Control": "no-store" } });
+    }
+
     return Response.json({
       status: "picker",
       source: result.source || "unknown",
