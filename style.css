@@ -412,3 +412,216 @@ a {
   pointer-events: auto !important;
   z-index: 100000 !important;
 }
+
+/* =========================
+   DEVICE / BATTERY CARD
+========================= */
+
+.device-card{
+  display:flex;
+  align-items:center;
+  gap:16px;
+  padding:16px 18px;
+  margin:12px 0 14px;
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:18px;
+  box-shadow:0 8px 25px rgba(74,145,185,.08);
+}
+
+.device-phone{
+  flex:none;
+  width:56px;
+  height:96px;
+  border-radius:14px;
+  background:#15283b;
+  padding:8px 6px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  box-shadow:inset 0 0 0 2px #2b3e52;
+}
+
+.device-notch{
+  width:18px;
+  height:4px;
+  border-radius:3px;
+  background:#0a141f;
+  margin-bottom:6px;
+}
+
+.device-screen{
+  flex:1;
+  width:100%;
+  border-radius:9px;
+  background:linear-gradient(160deg,#e9f6ff,#d3ecfb);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:5px;
+  padding:6px 4px;
+}
+
+.device-battery-icon{
+  display:flex;
+  align-items:center;
+}
+
+.device-battery-body{
+  width:24px;
+  height:12px;
+  border:1.5px solid #3b6c8c;
+  border-radius:3px;
+  padding:1.5px;
+  display:flex;
+  align-items:center;
+}
+
+.device-battery-fill{
+  height:100%;
+  width:70%;
+  border-radius:1px;
+  background:#3fb87f;
+  transition:width .4s ease, background .4s ease;
+}
+
+.device-battery-fill.low{background:#e2574c}
+.device-battery-fill.medium{background:#e2a53c}
+
+.device-battery-tip{
+  width:2.5px;
+  height:6px;
+  background:#3b6c8c;
+  border-radius:0 2px 2px 0;
+  margin-left:1px;
+}
+
+.device-screen strong{
+  font-size:10px;
+  color:#22496a;
+  font-weight:900;
+}
+
+.device-info{
+  display:grid;
+  gap:4px;
+  min-width:0;
+}
+
+.device-info strong{
+  font-size:13px;
+}
+
+.device-battery-status{
+  font-size:10px;
+  color:var(--muted);
+}
+
+body.dark-mode .device-card{
+  background:#17222d;
+  border-color:#2b3b49;
+}
+
+body.dark-mode .device-phone{
+  background:#0a141f;
+  box-shadow:inset 0 0 0 2px #1c2b38;
+}
+
+body.dark-mode .device-screen{
+  background:linear-gradient(160deg,#1d2a36,#101a23);
+}
+
+body.dark-mode .device-screen strong{
+  color:#bfe4ff;
+}
+
+@media(max-width:700px){
+  .device-card{padding:14px}
+  .device-phone{width:48px;height:84px}
+}
+
+/* =========================
+   TUTORIAL SECTION
+========================= */
+
+.tutorial-section{
+  margin-top:26px;
+}
+
+.tutorial-section h2{
+  margin:4px 0 14px;
+  font-size:20px;
+  letter-spacing:-.5px;
+}
+
+.tutorial-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:14px;
+}
+
+.tutorial-card{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:18px;
+  box-shadow:0 7px 22px rgba(72,143,184,.07);
+}
+
+.tutorial-logo{
+  width:40px;
+  height:40px;
+  display:grid;
+  place-items:center;
+  border-radius:12px;
+  font-size:18px;
+  font-weight:950;
+  margin-bottom:12px;
+  background:#eef8ff;
+  color:#4b9dce;
+}
+
+.tutorial-logo.youtube{background:#ffe6e6;color:#e02929}
+.tutorial-logo.tiktok{background:#e9e9ef;color:#111}
+.tutorial-logo.instagram{background:linear-gradient(135deg,#fde3e0,#f7d9ee);color:#c2318c}
+
+.tutorial-card strong{
+  display:block;
+  font-size:13px;
+  margin-bottom:9px;
+}
+
+.tutorial-card ol{
+  margin:0;
+  padding-left:16px;
+  display:grid;
+  gap:6px;
+}
+
+.tutorial-card li{
+  font-size:10.5px;
+  line-height:1.5;
+  color:var(--muted);
+}
+
+.tutorial-card li b{
+  color:var(--text);
+}
+
+body.dark-mode .tutorial-card{
+  background:#17222d;
+  border-color:#2b3b49;
+}
+
+body.dark-mode .tutorial-logo.youtube{background:#3a1a1a;color:#ff6b6b}
+body.dark-mode .tutorial-logo.tiktok{background:#2a2a30;color:#fff}
+body.dark-mode .tutorial-logo.instagram{background:linear-gradient(135deg,#3a1f2e,#331a2b);color:#ef8bcf}
+
+body.dark-mode .tutorial-card li{
+  color:#9eafbb;
+}
+
+@media(max-width:700px){
+  .tutorial-grid{grid-template-columns:1fr}
+}
