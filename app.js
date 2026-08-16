@@ -104,7 +104,7 @@ async function downloadVideo(){
     box.innerHTML =
       `<strong>Download belum dapat diproses.</strong><br>` +
       `${escapeHtml(error.message)}<br>` +
-      `<small>Pastikan DOWNLOADER_API_URL sudah diisi di Netlify dan API downloader kamu aktif.</small>`;
+      `<small>Pastikan DOWNLOADER_API_URL sudah diisi di Vercel dan API downloader kamu aktif.</small>`;
   }finally{
     btn.disabled = false;
     btn.innerHTML = "<span>↓</span> Download Video";
