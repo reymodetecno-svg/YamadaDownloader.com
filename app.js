@@ -282,8 +282,7 @@ function initPWA(){
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  setTimeout(() => $("#splash").classList.add("hide"), 1350);
-
+  
   const notice = $("#waNotice");
   $("#waLink").href = CONFIG.whatsappChannel;
   $("#csLink").href = CONFIG.customerService;
