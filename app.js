@@ -282,6 +282,25 @@ function initPWA(){
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+
+  // Hilangkan splash dan pastikan tidak menutupi halaman
+  const splash = $("#splash");
+
+  if (splash) {
+    setTimeout(() => {
+      splash.classList.add("hide");
+
+      // Pastikan benar-benar tidak menerima klik
+      splash.style.pointerEvents = "none";
+
+      setTimeout(() => {
+        splash.style.display = "none";
+      }, 500);
+
+    }, 1200);
+  }
+
+  const notice = $("#waNotice");
   
   const notice = $("#waNotice");
   $("#waLink").href = CONFIG.whatsappChannel;
