@@ -274,7 +274,6 @@ async function downloadSelectedMedia(
     button.innerHTML = originalLabel;
   }
 }
-}
 
 function escapeHtml(value){
   return String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
@@ -487,72 +486,3 @@ document.addEventListener("DOMContentLoaded", () => {
   initPWA();
 
 });
-
-  const notice = $("#waNotice");
-  
-  const notice = $("#waNotice");
-  $("#waLink").href = CONFIG.whatsappChannel;
-  $("#csLink").href = CONFIG.customerService;
-  setTimeout(() => notice.classList.add("show"), 1550);
-  setTimeout(() => notice.classList.remove("show"), 6550);
-  $("#closeNotice").addEventListener("click", () => notice.classList.remove("show"));
-
-  $$(".nav-item, [data-page]").forEach(el => {
-    el.addEventListener("click", e => {
-      const page = el.dataset.page;
-      if(page) setPage(page);
-    });
-  });
-
-  $$(".tool-card").forEach(card => card.addEventListener("click", () => openTool(card.dataset.tool)));
-  $("#pasteBtn").addEventListener("click", pasteUrl);
-  $("#downloadBtn").addEventListener("click", downloadVideo);
-  $("#videoUrl").addEventListener("keydown", e => { if(e.key === "Enter") downloadVideo(); });
-  
-});
-
-// =========================
-// MODE GELAP / MODE CERAH
-// =========================
-
-const themeToggle = document.getElementById("themeToggle");
-const themeIcon = document.getElementById("themeIcon");
-
-// Ambil tema yang tersimpan
-const savedTheme = localStorage.getItem("theme");
-
-if (savedTheme === "dark") {
-  document.body.classList.add("dark-mode");
-
-  if (themeIcon) {
-    themeIcon.textContent = "🌙";
-  }
-} else {
-  document.body.classList.remove("dark-mode");
-
-  if (themeIcon) {
-    themeIcon.textContent = "☀️";
-  }
-}
-
-// Tombol ganti tema
-if (themeToggle) {
-  themeToggle.addEventListener("click", function () {
-
-    document.body.classList.toggle("dark-mode");
-
-    const darkMode =
-      document.body.classList.contains("dark-mode");
-
-    localStorage.setItem(
-      "theme",
-      darkMode ? "dark" : "light"
-    );
-
-    if (themeIcon) {
-      themeIcon.textContent =
-        darkMode ? "🌙" : "☀️";
-    }
-
-  });
-}
