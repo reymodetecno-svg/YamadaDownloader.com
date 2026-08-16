@@ -321,9 +321,7 @@ document.addEventListener("DOMContentLoaded", () => {
   $("#pasteBtn").addEventListener("click", pasteUrl);
   $("#downloadBtn").addEventListener("click", downloadVideo);
   $("#videoUrl").addEventListener("keydown", e => { if(e.key === "Enter") downloadVideo(); });
-
-  if("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(()=>{});
-  initPWA();
+  
 });
 
 // =========================
