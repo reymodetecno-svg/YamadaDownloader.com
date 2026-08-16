@@ -78,6 +78,8 @@ export default async function handler(request) {
 
       const filename = `${title}.${extension}`;
 
+      // Stream langsung dari sumber ke browser, tanpa buffer di server
+      // -> nggak kena limit ukuran response, cocok buat file besar (YouTube/Instagram)
       return new Response(mediaResponse.body, {
         status: 200,
         headers: {
@@ -111,4 +113,8 @@ export default async function handler(request) {
       author: result.author || "",
       duration: result.duration || 0,
       picker
-    }, { status: 200, headers: {
+    }, { status: 200, headers: { "Cache-Control": "no-store" } });
+  } catch (error) {
+    return Response.json({ error: `Tidak dapat terhubung ke Nexray API: ${error.message}` }, { status: 502 });
+  }
+}
