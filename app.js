@@ -526,3 +526,271 @@ document.addEventListener("DOMContentLoaded", () => {
   initDeviceStatus();
   initPWA();
 });
+
+// ========================================
+// REMOVE BACKGROUND TOOL
+// ========================================
+
+const REMOVE_BG_API =
+  "https://api.nexray.eu.cc/tools/removebg";
+
+let removeBgSelectedFile = null;
+
+
+// Buka modal
+function openRemoveBg(){
+
+  const modal = document.getElementById("removeBgModal");
+
+  if(!modal) return;
+
+  modal.classList.add("active");
+}
+
+
+// Tutup modal
+function closeRemoveBg(){
+
+  const modal = document.getElementById("removeBgModal");
+
+  if(!modal) return;
+
+  modal.classList.remove("active");
+}
+
+
+// Pilih file
+document.addEventListener("change", function(e){
+
+  if(e.target.id !== "removeBgFile") return;
+
+  const file = e.target.files?.[0];
+
+  if(!file) return;
+
+  removeBgSelectedFile = file;
+
+  const preview =
+    document.getElementById("removeBgPreview");
+
+  if(preview){
+
+    const imageURL =
+      URL.createObjectURL(file);
+
+    preview.innerHTML = `
+      <img src="${imageURL}" alt="Preview">
+    `;
+
+    preview.style.display = "block";
+  }
+
+});
+
+
+// Proses Remove BG
+async function processRemoveBg(){
+
+  const button =
+    document.getElementById("removeBgButton");
+
+  const status =
+    document.getElementById("removeBgStatus");
+
+  if(!removeBgSelectedFile){
+
+    status.textContent =
+      "Pilih gambar terlebih dahulu.";
+
+    status.className =
+      "remove-bg-status error";
+
+    return;
+  }
+
+  button.disabled = true;
+
+  status.textContent =
+    "Sedang menghapus background...";
+
+  status.className =
+    "remove-bg-status";
+
+
+  try{
+
+    const formData = new FormData();
+
+    formData.append(
+      "image",
+      removeBgSelectedFile
+    );
+
+
+    const response = await fetch(
+      REMOVE_BG_API,
+      {
+        method:"POST",
+        body:formData
+      }
+    );
+
+
+    if(!response.ok){
+
+      throw new Error(
+        `API Error ${response.status}`
+      );
+
+    }
+
+
+    const contentType =
+      response.headers.get("content-type") || "";
+
+
+    /*
+      Jika API langsung mengembalikan
+      file PNG/JPG.
+    */
+
+    if(
+      contentType.includes("image/")
+    ){
+
+      const blob =
+        await response.blob();
+
+      const resultURL =
+        URL.createObjectURL(blob);
+
+
+      status.textContent =
+        "Background berhasil dihapus!";
+
+      status.className =
+        "remove-bg-status success";
+
+
+      const preview =
+        document.getElementById(
+          "removeBgPreview"
+        );
+
+
+      preview.innerHTML = `
+        <img
+          src="${resultURL}"
+          alt="Result"
+        >
+
+        <button
+          class="remove-bg-button"
+          style="margin-top:12px"
+          onclick="downloadRemoveBgResult('${resultURL}')"
+        >
+          <i class="fas fa-download"></i>
+          Download Hasil
+        </button>
+      `;
+
+      return;
+    }
+
+
+    /*
+      Jika API mengembalikan JSON.
+    */
+
+    const data =
+      await response.json();
+
+
+    const resultURL =
+      data.url ||
+      data.result ||
+      data.image ||
+      data.output;
+
+
+    if(!resultURL){
+
+      throw new Error(
+        "Response API tidak memiliki hasil gambar."
+      );
+
+    }
+
+
+    status.textContent =
+      "Background berhasil dihapus!";
+
+    status.className =
+      "remove-bg-status success";
+
+
+    const preview =
+      document.getElementById(
+        "removeBgPreview"
+      );
+
+
+    preview.innerHTML = `
+      <img
+        src="${resultURL}"
+        alt="Result"
+      >
+
+      <button
+        class="remove-bg-button"
+        style="margin-top:12px"
+        onclick="downloadRemoveBgResult('${resultURL}')"
+      >
+        <i class="fas fa-download"></i>
+        Download Hasil
+      </button>
+    `;
+
+
+  }catch(error){
+
+    console.error(
+      "Remove BG Error:",
+      error
+    );
+
+    status.textContent =
+      "Gagal menghapus background. Coba lagi.";
+
+    status.className =
+      "remove-bg-status error";
+
+  }finally{
+
+    button.disabled = false;
+
+  }
+
+}
+
+
+// Download hasil
+function downloadRemoveBgResult(url){
+
+  const a =
+    document.createElement("a");
+
+  a.href = url;
+
+  a.download =
+    "yamada-removebg.png";
+
+  a.target = "_blank";
+
+  document.body.appendChild(a);
+
+  a.click();
+
+  a.remove();
+
+}
