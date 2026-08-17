@@ -28,6 +28,11 @@ const tools = {
     desc: "Download Reels atau video Instagram dari link publik.",
     icon: "◎"
   }
+  pinterest: {
+    title: "Pinterest Downloader",
+    desc: "Download foto dari pin dan video dengan link publik.",
+    icon: "@"
+  },
 };
 
 const $ = (s) => document.querySelector(s);
