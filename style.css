@@ -32,13 +32,13 @@ a{color:inherit;text-decoration:none}
 @keyframes pageIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 .hero{
   position:relative;
-  height:420px;
+  height:190px;
   overflow:hidden;
-  border:0;
-  border-radius:0;
-  background:transparent;
-  box-shadow:none;
-  margin:0 -18px 0;
+  border:1px solid var(--line);
+  border-radius:20px;
+  background:#0b1420;
+  box-shadow:0 12px 30px rgba(67,142,188,.16);
+  margin:14px 0 4px;
 }
 
 .hero video{
@@ -46,20 +46,6 @@ a{color:inherit;text-decoration:none}
   height:100%;
   object-fit:cover;
   display:block;
-
-  -webkit-mask-image:linear-gradient(
-    to bottom,
-    #000 0%,
-    #000 55%,
-    transparent 50%
-  );
-
-  mask-image:linear-gradient(
-    to bottom,
-    #000 0%,
-    #000 55%,
-    transparent 100%
-  );
 }
 
 .hero::after{
@@ -68,13 +54,13 @@ a{color:inherit;text-decoration:none}
   left:0;
   right:0;
   bottom:0;
-  height:45%;
+  height:38%;
   pointer-events:none;
 
   background:linear-gradient(
     to bottom,
     transparent 0%,
-    var(--bg) 100%
+    rgba(0,0,0,.45) 100%
   );
 }
 
@@ -102,10 +88,19 @@ a{color:inherit;text-decoration:none}
 }
 .badge,.eyebrow{font-size:9px;font-weight:900;letter-spacing:1.5px;color:#559fce}
 .badge{display:inline-block;color:#fff;border:1px solid rgba(255,255,255,.4);padding:7px 10px;border-radius:99px;background:rgba(255,255,255,.1);backdrop-filter:blur(8px)}
-.profile-card{display:flex;align-items:center;gap:13px;padding:15px 17px;margin:12px 0 28px;background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 8px 25px rgba(74,145,185,.08)}
-.avatar{width:45px;height:45px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(135deg,#dff3ff,#b9e2fb);color:#368fc7;font-weight:950}
-.profile-main{display:grid;gap:3px;flex:1}.profile-main strong{font-size:13px}.profile-main span{font-size:10px;color:var(--muted)}
-.profile-stats{display:flex;gap:16px;color:var(--muted);font-size:9px;text-align:right}.profile-stats span{display:grid;gap:2px}.profile-stats b{color:#4a9dce;font-size:11px}
+.status-card{padding:16px 17px;margin:14px 0 0;background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:0 8px 25px rgba(74,145,185,.08)}
+.status-head{display:flex;align-items:center;gap:12px;padding-bottom:14px;margin-bottom:14px;border-bottom:1px solid var(--line)}
+.avatar{width:42px;height:42px;flex:none;border-radius:13px;display:grid;place-items:center;background:linear-gradient(135deg,#dff3ff,#b9e2fb);color:#368fc7;font-weight:950}
+.status-head-text{display:grid;gap:3px;flex:1;min-width:0}.status-head-text strong{font-size:13px}.status-head-text span{font-size:10px;color:var(--muted)}
+.status-badge{display:flex;align-items:center;gap:6px;font-size:9px;font-weight:900;color:#22a06b;background:#e4f8ee;padding:6px 10px;border-radius:99px;flex:none}
+.status-badge i{width:6px;height:6px;border-radius:50%;background:#22a06b}
+.status-rows{display:grid;gap:11px}
+.status-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.status-label{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);font-weight:700}
+.status-dot{width:6px;height:6px;border-radius:50%;background:#9fc4dc;flex:none}
+.status-value{font-size:11.5px;font-weight:900;color:var(--text);text-align:right}
+.status-value.low{color:#d9534f}
+.status-value.medium{color:#d99a34}
 .section-head{display:flex;justify-content:space-between;align-items:end;margin-bottom:13px}.section-head h2,.credits h2{margin:4px 0 0;font-size:20px;letter-spacing:-.5px}.online{font-size:10px;color:#39a875;font-weight:800}.online i{display:inline-block;width:7px;height:7px;border-radius:50%;background:#43c487;margin-right:5px;box-shadow:0 0 0 4px #e3f8ed}
 .tool-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
 .tool-card{position:relative;text-align:left;border:1px solid var(--line);background:#fff;border-radius:17px;padding:18px;box-shadow:0 7px 22px rgba(72,143,184,.07);transition:.2s}
@@ -130,7 +125,7 @@ a{color:inherit;text-decoration:none}
 .nav-item{border:0;background:transparent;min-width:90px;padding:5px 10px;color:#8295a3;display:grid;place-items:center;gap:3px;border-radius:12px}.nav-item span{font-size:17px;line-height:1}.nav-item small{font-size:9px;font-weight:800}.nav-item.active{color:#3f9dce;background:#edf8ff}
 .toast{position:fixed;z-index:120;left:50%;bottom:93px;transform:translate(-50%,15px);opacity:0;pointer-events:none;background:#cfeaff;color:#0d3a5c;padding:10px 16px;border-radius:12px;font-size:11px;font-weight:700;border:1px solid #a9d9f7;transition:.25s;box-shadow:0 10px 25px rgba(67,142,188,.25)}.toast.show{opacity:1;transform:translate(-50%,0)}
 body.dark-mode .toast{background:#1d3443;color:#bfe4ff;border-color:#2f5771}
-@media(max-width:700px){.app-shell{padding-left:10px;padding-right:10px}.topbar{height:62px}.hero{height:300px}.profile-stats{display:none}.tool-grid{grid-template-columns:1fr}.tool-card{min-height:98px;padding-left:72px}.tool-card .tool-icon{position:absolute;left:18px;top:18px}.tool-card .arrow{right:18px;top:50%;bottom:auto}.info-strip{gap:10px}.hero-overlay{padding:22px}.hero-overlay h1{font-size:28px}.bottom-nav{bottom:8px}}
+@media(max-width:700px){.app-shell{padding-left:10px;padding-right:10px}.topbar{height:62px}.hero{height:160px}.tool-grid{grid-template-columns:1fr}.tool-card{min-height:98px;padding-left:72px}.tool-card .tool-icon{position:absolute;left:18px;top:18px}.tool-card .arrow{right:18px;top:50%;bottom:auto}.info-strip{gap:10px}.hero-overlay{padding:22px}.hero-overlay h1{font-size:28px}.bottom-nav{bottom:8px}}
 @media(min-width:701px){main{padding-bottom:20px}}
 
 .result-box .download-option{display:block;padding:10px 12px;background:#eaf7ff;border:1px solid #cfeaf8;border-radius:10px;color:#328fc5;font-weight:900}.result-box .download-option:hover{background:#def2ff}
@@ -210,7 +205,7 @@ body.dark-mode .install-btn{
   color:#69b9ef;
 }
 
-body.dark-mode .profile-card,
+body.dark-mode .status-card,
 body.dark-mode .tool-card,
 body.dark-mode .credits,
 body.dark-mode .download-box,
@@ -218,6 +213,14 @@ body.dark-mode .settings-card,
 body.dark-mode .support-card{
   background:#17222d;
   border-color:#2b3b49;
+  color:#f2f7fa;
+}
+
+body.dark-mode .status-head{
+  border-bottom-color:#2b3b49;
+}
+
+body.dark-mode .status-value{
   color:#f2f7fa;
 }
 
@@ -229,7 +232,7 @@ body.dark-mode .credits{
   );
 }
 
-body.dark-mode .profile-main span,
+body.dark-mode .status-head-text span,
 body.dark-mode .tool-card small,
 body.dark-mode .credits p,
 body.dark-mode .download-head p,
@@ -411,134 +414,6 @@ a {
 .nav-item {
   pointer-events: auto !important;
   z-index: 100000 !important;
-}
-
-/* =========================
-   DEVICE / BATTERY CARD
-========================= */
-
-.device-card{
-  display:flex;
-  align-items:center;
-  gap:16px;
-  padding:16px 18px;
-  margin:12px 0 14px;
-  background:#fff;
-  border:1px solid var(--line);
-  border-radius:18px;
-  box-shadow:0 8px 25px rgba(74,145,185,.08);
-}
-
-.device-phone{
-  flex:none;
-  width:56px;
-  height:96px;
-  border-radius:14px;
-  background:#15283b;
-  padding:8px 6px;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  box-shadow:inset 0 0 0 2px #2b3e52;
-}
-
-.device-notch{
-  width:18px;
-  height:4px;
-  border-radius:3px;
-  background:#0a141f;
-  margin-bottom:6px;
-}
-
-.device-screen{
-  flex:1;
-  width:100%;
-  border-radius:9px;
-  background:linear-gradient(160deg,#e9f6ff,#d3ecfb);
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  gap:5px;
-  padding:6px 4px;
-}
-
-.device-battery-icon{
-  display:flex;
-  align-items:center;
-}
-
-.device-battery-body{
-  width:24px;
-  height:12px;
-  border:1.5px solid #3b6c8c;
-  border-radius:3px;
-  padding:1.5px;
-  display:flex;
-  align-items:center;
-}
-
-.device-battery-fill{
-  height:100%;
-  width:70%;
-  border-radius:1px;
-  background:#3fb87f;
-  transition:width .4s ease, background .4s ease;
-}
-
-.device-battery-fill.low{background:#e2574c}
-.device-battery-fill.medium{background:#e2a53c}
-
-.device-battery-tip{
-  width:2.5px;
-  height:6px;
-  background:#3b6c8c;
-  border-radius:0 2px 2px 0;
-  margin-left:1px;
-}
-
-.device-screen strong{
-  font-size:10px;
-  color:#22496a;
-  font-weight:900;
-}
-
-.device-info{
-  display:grid;
-  gap:4px;
-  min-width:0;
-}
-
-.device-info strong{
-  font-size:13px;
-}
-
-.device-battery-status{
-  font-size:10px;
-  color:var(--muted);
-}
-
-body.dark-mode .device-card{
-  background:#17222d;
-  border-color:#2b3b49;
-}
-
-body.dark-mode .device-phone{
-  background:#0a141f;
-  box-shadow:inset 0 0 0 2px #1c2b38;
-}
-
-body.dark-mode .device-screen{
-  background:linear-gradient(160deg,#1d2a36,#101a23);
-}
-
-body.dark-mode .device-screen strong{
-  color:#bfe4ff;
-}
-
-@media(max-width:700px){
-  .device-card{padding:14px}
-  .device-phone{width:48px;height:84px}
 }
 
 /* =========================
