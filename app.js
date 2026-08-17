@@ -31,8 +31,7 @@ const tools = {
   pinterest: {
   title: "Pinterest Downloader",
   desc: "Download foto, GIF, dan video Pinterest dari link publik.",
-  icon: "📌",
-  iconImg: "Pinterest.jpg"
+  icon: "📌"
 }
 };
 
