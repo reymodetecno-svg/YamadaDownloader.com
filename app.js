@@ -1,18 +1,8 @@
-// Bersihkan Service Worker/cache versi lama
+// Daftarkan Service Worker supaya web bisa diinstall sebagai aplikasi (PWA)
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.getRegistrations()
-    .then(registrations => {
-      registrations.forEach(reg => reg.unregister());
-    })
-    .catch(() => {});
-
-  if ("caches" in window) {
-    caches.keys()
-      .then(keys => {
-        keys.forEach(key => caches.delete(key));
-      })
-      .catch(() => {});
-  }
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw.js").catch(() => {});
+  });
 }
 
 const CONFIG = {
@@ -126,7 +116,7 @@ async function downloadVideo(){
     btn.disabled = false;
     btn.innerHTML = "<span>↓</span> Download Video";
   }
-}  // <-- TAMBAHKAN INI
+}
 
 function renderDownloadResult(data){
   const box = $("#resultBox");
