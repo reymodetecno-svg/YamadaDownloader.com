@@ -417,6 +417,16 @@ function initLoadingScreen(){
 
 document.addEventListener("DOMContentLoaded", () => {
 
+  // =========================
+  // LOADING SCREEN
+  // =========================
+
+  initLoadingScreen();
+
+  // =========================
+  // WHATSAPP NOTICE
+  // =========================
+
   const notice = $("#waNotice");
   const waLink = $("#waLink");
   const csLink = $("#csLink");
