@@ -16,17 +16,17 @@ const tools = {
   youtube: {
     title: "YouTube Downloader",
     desc: "Download video YouTube dan Shorts dengan link publik.",
-    icon: "▶"
+    icon: "Youtube.jpg"
   },
   tiktok: {
     title: "TikTok Downloader",
     desc: "Simpan video TikTok dari link publik yang kamu masukkan.",
-    icon: "♪"
+    icon: "Tiktok.jpg"
   },
   instagram: {
     title: "Instagram Downloader",
     desc: "Download Reels atau video Instagram dari link publik.",
-    icon: "◎"
+    icon: "Instagram.jpg"
   }
 };
 
