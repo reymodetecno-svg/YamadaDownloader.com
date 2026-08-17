@@ -348,12 +348,12 @@ function initLoadingScreen(){
   }
 
   const texts = [
-    "WELCOME",
-    "TO",
     "YAMADA",
-    "DOWNLOADER",
+    "ADALAH",
     "TEMPAT",
-    "DOWNLOAD"
+    "MEDOWNLOAD",
+    "LINK VIDEO",
+    "DAN LAINNYA"
   ];
 
   let progress = 0;
