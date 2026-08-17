@@ -27,7 +27,7 @@ const tools = {
     title: "Instagram Downloader",
     desc: "Download Reels atau video Instagram dari link publik.",
     icon:  "𖦹"
-  }
+  },
   pinterest: {
   title: "Pinterest Downloader",
   desc: "Download foto, GIF, dan video Pinterest dari link publik.",
