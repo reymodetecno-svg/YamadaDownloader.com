@@ -50,8 +50,6 @@ export default async function handler(request) {
       return Response.json({ error: "API berhasil dipanggil tetapi tidak ada media download." }, { status: 422 });
     }
 
-    // Jika ini permintaan "download" untuk satu format terpilih,
-    // balas dengan URL media langsung, bukan daftar picker lagi.
     if (shouldDownload) {
       const chosen = picker[mediaIndex];
       if (!chosen || !chosen.url) {
