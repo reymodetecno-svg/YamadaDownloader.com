@@ -334,10 +334,6 @@ function initDeviceStatus(){
 
 document.addEventListener("DOMContentLoaded", () => {
 
-  // =========================
-  // WHATSAPP NOTICE
-  // =========================
-
   const notice = $("#waNotice");
   const waLink = $("#waLink");
   const csLink = $("#csLink");
@@ -363,168 +359,77 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-
-  // =========================
-  // NAVIGASI
-  // =========================
-
   document.querySelectorAll(".nav-item").forEach(button => {
-
     button.addEventListener("click", () => {
-
       const page = button.dataset.page;
-
       if (!page) return;
-
       setPage(page);
-
     });
-
   });
-
-
-  // =========================
-  // TOOL DOWNLOADER
-  // =========================
 
   document.querySelectorAll(".tool-card").forEach(card => {
-
     card.addEventListener("click", () => {
-
       const tool = card.dataset.tool;
-
       if (!tool) return;
-
       openTool(tool);
-
     });
-
   });
 
-
-  // =========================
-  // BACK BUTTON
-  // =========================
-
   document.querySelectorAll("[data-page]").forEach(button => {
-
     button.addEventListener("click", () => {
-
       const page = button.dataset.page;
-
       if (page) {
         setPage(page);
       }
-
     });
-
   });
 
-
-  // =========================
-  // PASTE
-  // =========================
-
   const pasteBtn = $("#pasteBtn");
-
   if (pasteBtn) {
     pasteBtn.addEventListener("click", pasteUrl);
   }
 
-
-  // =========================
-  // DOWNLOAD
-  // =========================
-
   const downloadBtn = $("#downloadBtn");
-
   if (downloadBtn) {
     downloadBtn.addEventListener("click", downloadVideo);
   }
 
-
   const videoUrl = $("#videoUrl");
-
   if (videoUrl) {
-
     videoUrl.addEventListener("keydown", event => {
-
       if (event.key === "Enter") {
         downloadVideo();
       }
-
     });
-
   }
-
-
-  // =========================
-  // THEME
-  // =========================
 
   const themeToggle = $("#themeToggle");
   const themeIcon = $("#themeIcon");
 
   let savedTheme = null;
-
   try {
     savedTheme = localStorage.getItem("theme");
   } catch {}
 
   if (savedTheme === "dark") {
-
     document.body.classList.add("dark-mode");
-
-    if (themeIcon) {
-      themeIcon.textContent = "🌙";
-    }
-
+    if (themeIcon) themeIcon.textContent = "🌙";
   } else {
-
     document.body.classList.remove("dark-mode");
-
-    if (themeIcon) {
-      themeIcon.textContent = "☀️";
-    }
-
+    if (themeIcon) themeIcon.textContent = "☀️";
   }
-
 
   if (themeToggle) {
-
     themeToggle.addEventListener("click", () => {
-
       document.body.classList.toggle("dark-mode");
-
       const dark = document.body.classList.contains("dark-mode");
-
       try {
-        localStorage.setItem(
-          "theme",
-          dark ? "dark" : "light"
-        );
+        localStorage.setItem("theme", dark ? "dark" : "light");
       } catch {}
-
-      if (themeIcon) {
-        themeIcon.textContent = dark ? "🌙" : "☀️";
-      }
-
+      if (themeIcon) themeIcon.textContent = dark ? "🌙" : "☀️";
     });
-
   }
 
-
-  // =========================
-  // DEVICE STATUS
-  // =========================
-
   initDeviceStatus();
-
-
-  // =========================
-  // PWA
-  // =========================
-
   initPWA();
-
 });
