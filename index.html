@@ -46,35 +46,29 @@
       
         </div>
 
-        <section class="device-card">
-          <div class="device-phone" id="devicePhone">
-            <div class="device-notch"></div>
-            <div class="device-screen">
-              <div class="device-battery-icon">
-                <div class="device-battery-body">
-                  <div class="device-battery-fill" id="deviceBatteryFill"></div>
-                </div>
-                <div class="device-battery-tip"></div>
-              </div>
-              <strong id="deviceBatteryPercent">--%</strong>
+        <section class="status-card">
+          <div class="status-head">
+            <div class="avatar">Y</div>
+            <div class="status-head-text">
+              <strong>YamadaDownloader</strong>
+              <span>Media downloader</span>
             </div>
+            <span class="status-badge"><i></i> Online</span>
           </div>
-          <div class="device-info">
-            <span class="eyebrow">PERANGKAT KAMU</span>
-            <strong id="deviceType">Mendeteksi perangkat...</strong>
-            <span id="deviceBatteryStatus" class="device-battery-status">Mengecek baterai...</span>
-          </div>
-        </section>
 
-        <section class="profile-card">
-          <div class="avatar">Y</div>
-          <div class="profile-main">
-            <strong>YamadaDownloader</strong>
-            <span>Media downloader</span>
-          </div>
-          <div class="profile-stats">
-            <span><b>24/7</b> Service</span>
-            <span><b>Fast</b> Download</span>
+          <div class="status-rows">
+            <div class="status-row">
+              <span class="status-label"><i class="status-dot"></i>Perangkat</span>
+              <span class="status-value" id="deviceType">Mendeteksi...</span>
+            </div>
+            <div class="status-row">
+              <span class="status-label"><i class="status-dot"></i>Baterai</span>
+              <span class="status-value" id="deviceBatteryStatus">Mengecek...</span>
+            </div>
+            <div class="status-row">
+              <span class="status-label"><i class="status-dot"></i>Layanan</span>
+              <span class="status-value">24/7 • Fast Download</span>
+            </div>
           </div>
         </section>
 
