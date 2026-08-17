@@ -300,8 +300,6 @@ function initPWA(){
 function initDeviceStatus(){
   const typeEl = $("#deviceType");
   const statusEl = $("#deviceBatteryStatus");
-  const percentEl = $("#deviceBatteryPercent");
-  const fillEl = $("#deviceBatteryFill");
 
   if (!typeEl) return;
 
@@ -318,17 +316,14 @@ function initDeviceStatus(){
   function updateBattery(battery){
     const percent = Math.round(battery.level * 100);
 
-    if (percentEl) percentEl.textContent = `${percent}%`;
-    if (fillEl) {
-      fillEl.style.width = `${percent}%`;
-      fillEl.classList.remove("low", "medium");
-      if (percent <= 20) fillEl.classList.add("low");
-      else if (percent <= 50) fillEl.classList.add("medium");
-    }
     if (statusEl) {
+      statusEl.classList.remove("low", "medium");
+      if (percent <= 20) statusEl.classList.add("low");
+      else if (percent <= 50) statusEl.classList.add("medium");
+
       statusEl.textContent = battery.charging
-        ? `${percent}% • Sedang mengisi daya`
-        : `${percent}% • Tidak mengisi daya`;
+        ? `${percent}% • Mengisi daya`
+        : `${percent}% • Tidak mengisi`;
     }
   }
 
@@ -340,11 +335,10 @@ function initDeviceStatus(){
         battery.addEventListener("chargingchange", () => updateBattery(battery));
       })
       .catch(() => {
-        if (statusEl) statusEl.textContent = "Info baterai tidak tersedia.";
+        if (statusEl) statusEl.textContent = "Tidak tersedia";
       });
   } else {
-    if (percentEl) percentEl.textContent = "N/A";
-    if (statusEl) statusEl.textContent = "Browser ini tidak mendukung info baterai.";
+    if (statusEl) statusEl.textContent = "Tidak didukung";
   }
 }
 
