@@ -105,7 +105,7 @@ a{color:inherit;text-decoration:none}
 .tool-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
 .tool-card{position:relative;text-align:left;border:1px solid var(--line);background:#fff;border-radius:17px;padding:18px;box-shadow:0 7px 22px rgba(72,143,184,.07);transition:.2s}
 .tool-card:hover{transform:translateY(-3px);box-shadow:var(--shadow);border-color:#b9def1}
-.tool-icon{width:38px;height:38px;display:grid;place-items:center;border-radius:12px;background:#eef8ff;color:#4b9dce;font-weight:950;font-size:18px;margin-bottom:13px;object-fit:cover}.tool-icon.big{flex:none;width:55px;height:55px;margin:0;font-size:24px}.tool-icon.pinterest{background:#ffe4e8}
+.tool-icon{width:38px;height:38px;display:grid;place-items:center;border-radius:12px;background:#eef8ff;color:#4b9dce;font-weight:950;font-size:18px;margin-bottom:13px}.tool-icon.big{flex:none;width:55px;height:55px;margin:0;font-size:24px}
 .tool-card strong{display:block;font-size:13px}.tool-card small{display:block;color:var(--muted);font-size:9px;margin-top:4px}.arrow{position:absolute;right:14px;bottom:13px;color:#79b7d8}
 .credits{margin-top:30px;padding:22px;border:1px solid var(--line);background:linear-gradient(135deg,#fff,#f1faff);border-radius:20px}
 .credits p{color:var(--muted);font-size:11px;line-height:1.7;margin:9px 0 14px}.credit-pills{display:flex;flex-wrap:wrap;gap:7px}.credit-pills span{font-size:9px;font-weight:800;padding:7px 9px;border-radius:99px;background:#e9f6ff;color:#4d96c2}
