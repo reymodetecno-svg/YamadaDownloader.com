@@ -628,7 +628,7 @@ async function processRemoveBg(){
 
 
     const response = await fetch(
-     NEXRAY_API_URL,
+      NEXRAY_API_URL,
       {
         method:"POST",
         body:formData
