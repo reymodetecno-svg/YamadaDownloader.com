@@ -423,7 +423,7 @@ a {
   gap:16px;
   padding:16px 18px;
   margin:12px 0 14px;
-  background:#FFFFFF;
+  background:#fff;
   border:1px solid var(--line);
   border-radius:18px;
   box-shadow:0 8px 25px rgba(74,145,185,.08);
@@ -446,7 +446,7 @@ a {
   width:18px;
   height:4px;
   border-radius:3px;
-  background:#0096FF;
+  background:#0a141f;
   margin-bottom:6px;
 }
 
@@ -624,4 +624,31 @@ body.dark-mode .tutorial-card li{
 
 @media(max-width:700px){
   .tutorial-grid{grid-template-columns:1fr}
+}
+
+/* =========================
+   TOOL CARD - SEGERA HADIR
+========================= */
+
+.tool-card-soon{
+  border-style:dashed;
+  color:var(--muted);
+  cursor:default;
+  opacity:.7;
+}
+
+.tool-card-soon:hover{
+  transform:none;
+  box-shadow:0 7px 22px rgba(72,143,184,.07);
+  border-color:var(--line);
+}
+
+.tool-card-soon .tool-icon{
+  background:#f1f6fa;
+  color:#9db2c2;
+}
+
+body.dark-mode .tool-card-soon .tool-icon{
+  background:#1d2a36;
+  color:#5c7183;
 }
