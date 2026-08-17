@@ -531,7 +531,7 @@ document.addEventListener("DOMContentLoaded", () => {
 // REMOVE BACKGROUND TOOL
 // ========================================
 
-const REMOVE_BG_API =
+const NEXRAY_API_URL =
   "https://api.nexray.eu.cc/tools/removebg";
 
 let removeBgSelectedFile = null;
@@ -628,7 +628,7 @@ async function processRemoveBg(){
 
 
     const response = await fetch(
-      REMOVE_BG_API,
+      NEXRAY_API_URL,
       {
         method:"POST",
         body:formData
