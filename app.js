@@ -528,76 +528,96 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // ========================================
-// REMOVE BACKGROUND TOOL
+// YAMADA REMOVE BACKGROUND
 // ========================================
-
-const NEXRAY_API_URL =
-  "https://api.nexray.eu.cc/tools/removebg";
 
 let removeBgSelectedFile = null;
 
 
 // Buka modal
-function openRemoveBg(){
+function openRemoveBg() {
 
-  const modal = document.getElementById("removeBgModal");
+  const modal =
+    document.getElementById(
+      "removeBgModal"
+    );
 
-  if(!modal) return;
+  if (!modal) return;
 
   modal.classList.add("active");
 }
 
 
 // Tutup modal
-function closeRemoveBg(){
+function closeRemoveBg() {
 
-  const modal = document.getElementById("removeBgModal");
+  const modal =
+    document.getElementById(
+      "removeBgModal"
+    );
 
-  if(!modal) return;
+  if (!modal) return;
 
   modal.classList.remove("active");
 }
 
 
-// Pilih file
-document.addEventListener("change", function(e){
+// Pilih gambar
+document.addEventListener(
+  "change",
+  function (event) {
 
-  if(e.target.id !== "removeBgFile") return;
+    if (
+      event.target.id !==
+      "removeBgFile"
+    ) {
+      return;
+    }
 
-  const file = e.target.files?.[0];
+    const file =
+      event.target.files?.[0];
 
-  if(!file) return;
+    if (!file) return;
 
-  removeBgSelectedFile = file;
+    removeBgSelectedFile =
+      file;
 
-  const preview =
-    document.getElementById("removeBgPreview");
-
-  if(preview){
+    const preview =
+      document.getElementById(
+        "removeBgPreview"
+      );
 
     const imageURL =
       URL.createObjectURL(file);
 
     preview.innerHTML = `
-      <img src="${imageURL}" alt="Preview">
+      <img
+        src="${imageURL}"
+        alt="Preview"
+      >
     `;
 
-    preview.style.display = "block";
-  }
+    preview.style.display =
+      "block";
 
-});
+  }
+);
 
 
 // Proses Remove BG
-async function processRemoveBg(){
+async function processRemoveBg() {
 
   const button =
-    document.getElementById("removeBgButton");
+    document.getElementById(
+      "removeBgButton"
+    );
 
   const status =
-    document.getElementById("removeBgStatus");
+    document.getElementById(
+      "removeBgStatus"
+    );
 
-  if(!removeBgSelectedFile){
+  if (!removeBgSelectedFile) {
 
     status.textContent =
       "Pilih gambar terlebih dahulu.";
@@ -608,118 +628,74 @@ async function processRemoveBg(){
     return;
   }
 
+
   button.disabled = true;
 
   status.textContent =
-    "Sedang menghapus background...";
+    "Menghapus background...";
 
   status.className =
     "remove-bg-status";
 
 
-  try{
+  try {
 
-    const formData = new FormData();
-
-    formData.append(
-      "image",
-      removeBgSelectedFile
-    );
-
-
-    const response = await fetch(
-      NEXRAY_API_URL,
-      {
-        method:"POST",
-        body:formData
-      }
-    );
-
-
-    if(!response.ok){
-
-      throw new Error(
-        `API Error ${response.status}`
+    // File → Base64
+    const base64 =
+      await fileToBase64(
+        removeBgSelectedFile
       );
 
+
+    const response =
+      await fetch(
+        "/api/removebg",
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type":
+              "application/json"
+          },
+
+          body: JSON.stringify({
+            image: base64,
+
+            imageName:
+              removeBgSelectedFile.name
+          })
+        }
+      );
+
+
+    if (!response.ok) {
+
+      let errorMessage =
+        "Gagal memproses gambar.";
+
+      try {
+
+        const error =
+          await response.json();
+
+        errorMessage =
+          error.error ||
+          errorMessage;
+
+      } catch {}
+
+      throw new Error(
+        errorMessage
+      );
     }
 
 
-    const contentType =
-      response.headers.get("content-type") || "";
-
-
-    /*
-      Jika API langsung mengembalikan
-      file PNG/JPG.
-    */
-
-    if(
-      contentType.includes("image/")
-    ){
-
-      const blob =
-        await response.blob();
-
-      const resultURL =
-        URL.createObjectURL(blob);
-
-
-      status.textContent =
-        "Background berhasil dihapus!";
-
-      status.className =
-        "remove-bg-status success";
-
-
-      const preview =
-        document.getElementById(
-          "removeBgPreview"
-        );
-
-
-      preview.innerHTML = `
-        <img
-          src="${resultURL}"
-          alt="Result"
-        >
-
-        <button
-          class="remove-bg-button"
-          style="margin-top:12px"
-          onclick="downloadRemoveBgResult('${resultURL}')"
-        >
-          <i class="fas fa-download"></i>
-          Download Hasil
-        </button>
-      `;
-
-      return;
-    }
-
-
-    /*
-      Jika API mengembalikan JSON.
-    */
-
-    const data =
-      await response.json();
+    const blob =
+      await response.blob();
 
 
     const resultURL =
-      data.url ||
-      data.result ||
-      data.image ||
-      data.output;
-
-
-    if(!resultURL){
-
-      throw new Error(
-        "Response API tidak memiliki hasil gambar."
-      );
-
-    }
+      URL.createObjectURL(blob);
 
 
     status.textContent =
@@ -736,23 +712,32 @@ async function processRemoveBg(){
 
 
     preview.innerHTML = `
-      <img
-        src="${resultURL}"
-        alt="Result"
-      >
+      <div class="remove-bg-result">
 
-      <button
-        class="remove-bg-button"
-        style="margin-top:12px"
-        onclick="downloadRemoveBgResult('${resultURL}')"
-      >
-        <i class="fas fa-download"></i>
-        Download Hasil
-      </button>
+        <img
+          src="${resultURL}"
+          alt="Hasil Remove Background"
+        >
+
+        <a
+          href="${resultURL}"
+          download="yamada-removebg.png"
+          class="remove-bg-button"
+          style="
+            display:block;
+            text-decoration:none;
+            text-align:center;
+          "
+        >
+          <i class="fas fa-download"></i>
+          Download Hasil
+        </a>
+
+      </div>
     `;
 
 
-  }catch(error){
+  } catch (error) {
 
     console.error(
       "Remove BG Error:",
@@ -760,12 +745,13 @@ async function processRemoveBg(){
     );
 
     status.textContent =
-      "Gagal menghapus background. Coba lagi.";
+      error.message ||
+      "Gagal menghapus background.";
 
     status.className =
       "remove-bg-status error";
 
-  }finally{
+  } finally {
 
     button.disabled = false;
 
@@ -774,23 +760,32 @@ async function processRemoveBg(){
 }
 
 
-// Download hasil
-function downloadRemoveBgResult(url){
+// File → Base64
+function fileToBase64(file) {
 
-  const a =
-    document.createElement("a");
+  return new Promise(
+    (resolve, reject) => {
 
-  a.href = url;
+      const reader =
+        new FileReader();
 
-  a.download =
-    "yamada-removebg.png";
+      reader.onload =
+        () => resolve(
+          reader.result
+        );
 
-  a.target = "_blank";
+      reader.onerror =
+        () => reject(
+          new Error(
+            "Gagal membaca gambar."
+          )
+        );
 
-  document.body.appendChild(a);
+      reader.readAsDataURL(
+        file
+      );
 
-  a.click();
-
-  a.remove();
+    }
+  );
 
 }
