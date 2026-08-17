@@ -348,12 +348,12 @@ function initLoadingScreen(){
   }
 
   const texts = [
+    "WELCOME",
+    "TO",
     "YAMADA",
     "DOWNLOADER",
     "TEMPAT",
-    "DOWNLOAD",
-    "LINK VIDEO",
-    "DAN LAINNYA"
+    "DOWNLOAD"
   ];
 
   let progress = 0;
@@ -376,7 +376,7 @@ function initLoadingScreen(){
     loadingText.textContent = texts[textIndex];
     loadingText.classList.add("change");
 
-  }, 650);
+  }, 500);
 
 
   // Loading progress
