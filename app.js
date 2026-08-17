@@ -332,6 +332,89 @@ function initDeviceStatus(){
   }
 }
 
+// =================================
+// YAMADA DOWNLOADER LOADING SCREEN
+// =================================
+
+function initLoadingScreen(){
+
+  const loadingScreen = document.getElementById("loadingScreen");
+  const loadingText = document.getElementById("loadingText");
+  const loadingBar = document.getElementById("loadingBar");
+  const loadingPercent = document.getElementById("loadingPercent");
+
+  if(!loadingScreen || !loadingText || !loadingBar){
+    return;
+  }
+
+  const texts = [
+    "YAMADA",
+    "DOWNLOADER",
+    "TEMPAT",
+    "DOWNLOAD",
+    "LINK VIDEO",
+    "DAN LAINNYA"
+  ];
+
+  let progress = 0;
+  let textIndex = 0;
+
+  // Ganti text setiap beberapa saat
+  const textInterval = setInterval(() => {
+
+    textIndex++;
+
+    if(textIndex >= texts.length){
+      textIndex = 0;
+    }
+
+    loadingText.classList.remove("change");
+
+    // restart animation
+    void loadingText.offsetWidth;
+
+    loadingText.textContent = texts[textIndex];
+    loadingText.classList.add("change");
+
+  }, 650);
+
+
+  // Loading progress
+  const progressInterval = setInterval(() => {
+
+    progress += Math.random() * 5 + 2;
+
+    if(progress >= 100){
+      progress = 100;
+    }
+
+    loadingBar.style.width = `${progress}%`;
+
+    if(loadingPercent){
+      loadingPercent.textContent = `${Math.floor(progress)}%`;
+    }
+
+    if(progress >= 100){
+
+      clearInterval(progressInterval);
+      clearInterval(textInterval);
+
+      setTimeout(() => {
+
+        loadingScreen.classList.add("hide");
+
+        setTimeout(() => {
+          loadingScreen.remove();
+        }, 750);
+
+      }, 350);
+
+    }
+
+  }, 100);
+
+}
+
 document.addEventListener("DOMContentLoaded", () => {
 
   const notice = $("#waNotice");
