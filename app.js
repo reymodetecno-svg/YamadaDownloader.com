@@ -213,8 +213,8 @@ async function downloadSelectedMedia(
   title,
   extension,
   button
-){
-  if(!originalUrl){
+) {
+  if (!originalUrl) {
     showToast("Link video tidak ditemukan.");
     return;
   }
@@ -224,7 +224,7 @@ async function downloadSelectedMedia(
   button.disabled = true;
   button.innerHTML = "<span>⏳ Memproses...</span>";
 
-  try{
+  try {
     const response = await fetch(CONFIG.downloadEndpoint, {
       method: "POST",
       headers: {
@@ -239,38 +239,49 @@ async function downloadSelectedMedia(
 
     const data = await response.json().catch(() => ({}));
 
-    if(!response.ok){
+    if (!response.ok) {
       throw new Error(
         data.error || `HTTP ${response.status}`
       );
     }
 
-    if(!data.url){
+    if (!data.url) {
       throw new Error("URL download tidak diberikan API.");
     }
 
-    /*
-     * PENTING:
-     * Jangan fetch URL googlevideo.com dari Vercel.
-     * Browser langsung membuka URL media.
-     */
+    // Buat nama file
+    const safeTitle = String(title || "YamadaDownloader")
+      .replace(/[\\/:*?"<>|]/g, "")
+      .trim();
+
+    const safeExtension = String(extension || "mp4")
+      .replace(/[^a-zA-Z0-9]/g, "");
+
+    const fileName =
+      `${safeTitle || "YamadaDownloader"}.${safeExtension || "mp4"}`;
+
+    // Buat link download
     const link = document.createElement("a");
 
     link.href = data.url;
-    link.target = "_blank";
-    link.rel = "noopener noreferrer";
+    link.download = fileName;
+
+    // JANGAN gunakan target="_blank"
+    link.style.display = "none";
 
     document.body.appendChild(link);
     link.click();
     link.remove();
 
     showToast("✔ Download dimulai!");
-    showBigNotice("Sudah Didownload silahkan cek Chrome");
-  }catch(error){
+    showBigNotice("Sudah Didownload, silahkan cek Chrome");
+
+  } catch (error) {
     console.error("Download error:", error);
 
     showToast(`Gagal: ${error.message}`);
-  }finally{
+
+  } finally {
     button.disabled = false;
     button.innerHTML = originalLabel;
   }
