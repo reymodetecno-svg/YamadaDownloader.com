@@ -41,6 +41,16 @@ function showToast(message){
   window.toastTimer = setTimeout(() => el.classList.remove("show"), 2600);
 }
 
+function showBigNotice(message){
+  const el = $("#bigNotice");
+  if(!el) return;
+  const text = $("#bigNoticeText");
+  if(text) text.textContent = message || "Sudah Didownload silahkan cek Chrome";
+  el.classList.add("show");
+  clearTimeout(window.bigNoticeTimer);
+  window.bigNoticeTimer = setTimeout(() => el.classList.remove("show"), 3000);
+}
+
 function setPage(route){
   $$(".page").forEach(p => p.classList.toggle("active", p.dataset.route === route));
   $$(".nav-item").forEach(n => n.classList.toggle("active", n.dataset.page === route));
@@ -255,6 +265,7 @@ async function downloadSelectedMedia(
     link.remove();
 
     showToast("✔ Download dimulai!");
+    showBigNotice("Sudah Didownload silahkan cek Chrome");
   }catch(error){
     console.error("Download error:", error);
 
@@ -291,7 +302,7 @@ function initDeviceStatus(){
   const typeEl = $("#deviceType");
   const statusEl = $("#deviceBatteryStatus");
 
-  if (!typeEl) return;
+  if (!typeEl) return;Ff
 
   // Deteksi jenis perangkat dari user agent
   const ua = navigator.userAgent || "";
@@ -459,6 +470,11 @@ document.addEventListener("DOMContentLoaded", () => {
       setPage(page);
     });
   });
+
+    const bigNotice = $("#bigNotice");
+  if (bigNotice) {
+    bigNotice.addEventListener("click", () => bigNotice.classList.remove("show"));
+  }
 
   document.querySelectorAll(".tool-card").forEach(card => {
     card.addEventListener("click", () => {
@@ -720,9 +736,11 @@ async function processRemoveBg() {
         >
 
         <a
+               
           href="${resultURL}"
           download="yamada-removebg.png"
           class="remove-bg-button"
+          onclick="showBigNotice('Sudah Didownload silahkan cek Chrome')"
           style="
             display:block;
             text-decoration:none;
