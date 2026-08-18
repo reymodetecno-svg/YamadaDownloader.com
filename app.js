@@ -298,49 +298,119 @@ function initPWA(){
   });
 }
 
-function initDeviceStatus(){
-  const typeEl = $("#deviceType");
-  const statusEl = $("#deviceBatteryStatus");
+function initDeviceStatus() {
+  const typeEl = document.querySelector("#deviceType");
+  const statusEl = document.querySelector("#deviceBatteryStatus");
 
-  if (!typeEl) return;Ff
+  // Kalau elemen tidak ada, jangan hentikan JavaScript lainnya
+  if (!typeEl && !statusEl) return;
 
-  // Deteksi jenis perangkat dari user agent
+  // =========================
+  // DETEKSI PERANGKAT
+  // =========================
   const ua = navigator.userAgent || "";
+
   let deviceLabel = "Desktop";
-  if (/iPad|Tablet/i.test(ua) || (/Android/i.test(ua) && !/Mobile/i.test(ua))) {
+
+  if (
+    /iPad|Tablet/i.test(ua) ||
+    (/Android/i.test(ua) && !/Mobile/i.test(ua))
+  ) {
     deviceLabel = "Tablet";
-  } else if (/Mobi|Android|iPhone/i.test(ua)) {
+  } else if (
+    /Mobi|Android|iPhone|iPod/i.test(ua)
+  ) {
     deviceLabel = "Handphone";
   }
-  typeEl.textContent = deviceLabel;
 
-  function updateBattery(battery){
-    const percent = Math.round(battery.level * 100);
+  if (typeEl) {
+    typeEl.textContent = deviceLabel;
+  }
 
-    if (statusEl) {
-      statusEl.classList.remove("low", "medium");
-      if (percent <= 20) statusEl.classList.add("low");
-      else if (percent <= 50) statusEl.classList.add("medium");
+  // =========================
+  // STATUS BATERAI
+  // =========================
+  function updateBattery(battery) {
+    if (!statusEl) return;
 
-      statusEl.textContent = battery.charging
-        ? `${percent}% • Mengisi daya`
-        : `${percent}% • Tidak mengisi`;
+    const level = Number(battery.level);
+
+    // Cegah NaN / nilai aneh
+    if (!Number.isFinite(level)) {
+      statusEl.textContent = "Tidak tersedia";
+      return;
+    }
+
+    const percent = Math.max(
+      0,
+      Math.min(100, Math.round(level * 100))
+    );
+
+    // Reset class
+    statusEl.classList.remove("low", "medium");
+
+    if (percent <= 20) {
+      statusEl.classList.add("low");
+    } else if (percent <= 50) {
+      statusEl.classList.add("medium");
+    }
+
+    if (battery.charging) {
+      statusEl.textContent =
+        `${percent}% • Mengisi daya`;
+    } else {
+      statusEl.textContent =
+        `${percent}% • Tidak mengisi`;
     }
   }
 
-  if (navigator.getBattery) {
-    navigator.getBattery()
-      .then(battery => {
-        updateBattery(battery);
-        battery.addEventListener("levelchange", () => updateBattery(battery));
-        battery.addEventListener("chargingchange", () => updateBattery(battery));
-      })
-      .catch(() => {
-        if (statusEl) statusEl.textContent = "Tidak tersedia";
-      });
-  } else {
-    if (statusEl) statusEl.textContent = "Tidak didukung";
+  // =========================
+  // CEK BATTERY API
+  // =========================
+  if (
+    typeof navigator.getBattery !== "function"
+  ) {
+    if (statusEl) {
+      statusEl.textContent = "Tidak tersedia";
+    }
+
+    return;
   }
+
+  navigator
+    .getBattery()
+    .then(function (battery) {
+      if (!battery) {
+        if (statusEl) {
+          statusEl.textContent = "Tidak tersedia";
+        }
+        return;
+      }
+
+      // Tampilkan status awal
+      updateBattery(battery);
+
+      // Update ketika persentase berubah
+      battery.addEventListener(
+        "levelchange",
+        function () {
+          updateBattery(battery);
+        }
+      );
+
+      // Update ketika mulai/berhenti charging
+      battery.addEventListener(
+        "chargingchange",
+        function () {
+          updateBattery(battery);
+        }
+      );
+    })
+    .catch(function () {
+      if (statusEl) {
+        statusEl.textContent = "Tidak tersedia";
+      }
+    });
 }
 
 // =================================
