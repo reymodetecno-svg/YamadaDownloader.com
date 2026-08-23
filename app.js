@@ -9,7 +9,10 @@ const CONFIG = {
   whatsappChannel: "https://whatsapp.com/channel/0029Vb87O3oF6smw9uLgOD0U",
   customerService: "https://wa.me/6283869485575",
   // Vercel Function akan membaca DOWNLOADER_API_URL dari environment.
-  downloadEndpoint: "/api/download"
+  downloadEndpoint: "/api/download",
+  // Proxy same-origin supaya file video langsung kedownload (attachment),
+  // bukan cuma dibuka sebagai halaman/pemutar video.
+  proxyEndpoint: "/api/fetch"
 };
 
 const tools = {
@@ -260,10 +263,20 @@ async function downloadSelectedMedia(
     const fileName =
       `${safeTitle || "YamadaDownloader"}.${safeExtension || "mp4"}`;
 
-    // Buat link download
+    // PENTING: jangan arahkan <a> langsung ke URL CDN pihak ketiga.
+    // URL CDN itu cross-origin, jadi atribut `download` diabaikan browser,
+    // linknya cuma "dibuka" seperti halaman video biasa -> muncul dialog
+    // native "Download file lagi?" yang bikin bingung.
+    // Solusinya: proxy file itu lewat /api/fetch (same-origin) dengan
+    // header Content-Disposition: attachment, supaya begitu diklik file
+    // LANGSUNG kedownload tanpa dialog konfirmasi tambahan.
+    const proxyUrl =
+      `${CONFIG.proxyEndpoint}?url=${encodeURIComponent(data.url)}` +
+      `&filename=${encodeURIComponent(fileName)}`;
+
     const link = document.createElement("a");
 
-    link.href = data.url;
+    link.href = proxyUrl;
     link.download = fileName;
 
     // JANGAN gunakan target="_blank"
