@@ -208,13 +208,16 @@
         <div class="section-head">
           <div>
             <span class="eyebrow">TOOLS</span>
-            <h2>Download Now</h2>
+            <h2>Tools Populer</h2>
           </div>
         </div>
 
-        <div class="tool-grid">
+        <!-- Diisi otomatis lewat JS (renderPopularTools di app.js) berdasarkan
+             data pemakaian tools yang sebenarnya. Daftar LENGKAP semua tools
+             tetap ada di halaman "Tools" lewat menu bawah. -->
+        <div class="tool-grid" id="popularToolsGrid">
           <button class="tool-card" data-tool="youtube">
-          <img src="Youtube.jpg" alt="" class="tool-icon">
+            <img src="Youtube.jpg" alt="" class="tool-icon">
             <strong>YouTube</strong>
             <small>Video & Shorts</small>
             <span class="arrow">→</span>
@@ -237,12 +240,6 @@
             <small>Video & gambar</small>
             <span class="arrow">→</span>
           </button>
-          <button class="tool-card" type="button" onclick="openRemoveBg()">
-  <span class="tool-icon"><i class="fas fa-wand-magic-sparkles"></i></span>
-  <strong>Remove BG</strong>
-  <small>Hapus background otomatis</small>
-  <span class="arrow">→</span>
-</button>
         </div>
 
         <section class="credits">
