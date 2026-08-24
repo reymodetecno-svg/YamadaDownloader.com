@@ -10,6 +10,35 @@
   <link rel="stylesheet" href="/style.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer">
 <title>YamadaDownloader</title>
+<style>
+  .panel-error{ color:#ff6b6b; margin-top:10px; }
+  .panel-notice{ color:#f5b942; margin-top:10px; }
+  .panel-dashboard{ display:flex; flex-direction:column; gap:16px; }
+  .panel-stats-grid{
+    display:grid; grid-template-columns:1fr 1fr; gap:12px;
+  }
+  .panel-stat-card{
+    background:rgba(255,255,255,0.04);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:16px;
+    padding:16px;
+    display:flex; flex-direction:column; gap:6px;
+  }
+  .panel-stat-label{ font-size:12px; opacity:0.65; letter-spacing:0.03em; }
+  .panel-stat-value{ font-size:28px; font-weight:800; }
+  .panel-section-title{ font-size:14px; font-weight:700; opacity:0.8; margin-top:4px; }
+  .popular-tools-list{ display:flex; flex-direction:column; gap:8px; }
+  .popular-tool-row{
+    display:flex; align-items:center; justify-content:space-between;
+    background:rgba(255,255,255,0.04);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:12px;
+    padding:12px 14px;
+  }
+  .popular-tool-row b{ text-transform:capitalize; }
+  .popular-tool-rank{ opacity:0.5; font-size:12px; margin-right:8px; }
+  .panel-logout{ width:100%; text-align:center; }
+</style>
 </head>
 <body>
 
@@ -378,12 +407,56 @@
           <a class="primary-btn link-btn" id="csLink" href="#" target="_blank" rel="noopener">Buka Customer Service</a>
         </div>
       </section>
+
+      <section class="page" data-route="panel">
+        <div class="page-title">
+          <span class="eyebrow">RESTRICTED</span>
+          <h1>Panel Admin</h1>
+          <p>Halaman ini khusus pemilik website.</p>
+        </div>
+
+        <div id="panelLocked" class="download-box">
+          <label for="panelKeyInput">ADMIN KEY</label>
+          <div class="input-wrap">
+            <input id="panelKeyInput" type="password" autocomplete="off"
+                   placeholder="Masukkan key rahasia..." aria-label="Admin key">
+          </div>
+          <button id="panelUnlockBtn" class="primary-btn" type="button">
+            <span>🔒</span> Buka Panel
+          </button>
+          <p id="panelError" class="helper panel-error" hidden></p>
+        </div>
+
+        <div id="panelDashboard" class="panel-dashboard" hidden>
+          <div class="panel-stats-grid">
+            <div class="panel-stat-card">
+              <span class="panel-stat-label">Total Pengunjung</span>
+              <span id="statTotalVisits" class="panel-stat-value">0</span>
+            </div>
+            <div class="panel-stat-card">
+              <span class="panel-stat-label">Tools Dipakai</span>
+              <span id="statToolsUsed" class="panel-stat-value">0</span>
+            </div>
+          </div>
+
+          <div class="panel-section-title">Tools Paling Populer</div>
+          <div id="popularToolsList" class="popular-tools-list">
+            <p class="helper">Memuat data...</p>
+          </div>
+
+          <p id="panelKvNotice" class="helper panel-notice" hidden></p>
+
+          <button id="panelRefreshBtn" class="primary-btn" type="button">↻ Refresh Data</button>
+          <button id="panelLogoutBtn" class="back-btn panel-logout" type="button">Keluar dari Panel</button>
+        </div>
+      </section>
     </main>
 
     <nav class="bottom-nav" aria-label="Navigasi utama">
       <button class="nav-item active" data-page="home"><span>⌂</span><small>Beranda</small></button>
       <button class="nav-item" data-page="tools"><span>▦</span><small>Tools</small></button>
       <button class="nav-item" data-page="support"><span>●</span><small>CS</small></button>
+      <button class="nav-item" data-page="panel"><span>🛡</span><small>Panel</small></button>
     </nav>
   </div>
 
