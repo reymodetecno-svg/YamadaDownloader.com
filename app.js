@@ -20,7 +20,10 @@ const CONFIG = {
   trackEndpoint: "/api/track",
   adminAuthEndpoint: "/api/admin-auth",
   adminStatsEndpoint: "/api/admin-stats",
-  adminTokenStorageKey: "yamada_admin_token"
+  adminTokenStorageKey: "yamada_admin_token",
+
+  // Data publik buat nampilin "Tools Populer" di beranda (gak butuh login).
+  popularToolsEndpoint: "/api/popular-tools"
 };
 
 const tools = {
@@ -81,6 +84,71 @@ function trackEvent(payload){
   }catch{
     // no-op
   }
+}
+
+/* ===================== TOOLS POPULER (BERANDA) ===================== */
+
+// Semua tools yang boleh muncul di beranda sebagai "Tools Populer".
+// Daftar LENGKAP semua tools tetap ada statis di halaman "Tools" (All Tools),
+// ini cuma dipakai buat nentuin kandidat + tampilan kartu di beranda.
+const HOME_TOOL_CATALOG = [
+  { id: "youtube",   title: "YouTube",   desc: "Video & Shorts",             icon: "Youtube.jpg" },
+  { id: "tiktok",    title: "TikTok",    desc: "Video tanpa ribet",          icon: "Tiktok.jpg" },
+  { id: "instagram", title: "Instagram", desc: "Reels & video",              icon: "Instagram.jpg" },
+  { id: "pinterest", title: "Pinterest", desc: "Video & gambar",             icon: "Pinterest.jpg" },
+  { id: "removebg",  title: "Remove BG", desc: "Hapus background otomatis",  iconClass: "fas fa-wand-magic-sparkles" }
+];
+
+// Berapa banyak tool yang ditampilkan di beranda.
+const HOME_POPULAR_LIMIT = 4;
+
+function toolCardHTML(tool){
+  const iconHTML = tool.iconClass
+    ? `<span class="tool-icon"><i class="${tool.iconClass}"></i></span>`
+    : `<img src="${tool.icon}" alt="" class="tool-icon">`;
+
+  const clickAttr = tool.id === "removebg"
+    ? `type="button" onclick="openRemoveBg()"`
+    : `data-tool="${tool.id}"`;
+
+  return `
+    <button class="tool-card" ${clickAttr}>
+      ${iconHTML}
+      <strong>${tool.title}</strong>
+      <small>${tool.desc}</small>
+      <span class="arrow">→</span>
+    </button>
+  `;
+}
+
+// Ambil ranking pemakaian tools (data publik, gak butuh login admin) lalu
+// render top N di beranda. Kalau data belum ada / gagal diambil, tetap
+// tampil pakai urutan default di HOME_TOOL_CATALOG supaya beranda gak kosong.
+async function renderPopularTools(){
+  const grid = document.getElementById("popularToolsGrid");
+  if (!grid) return;
+
+  let ranking = HOME_TOOL_CATALOG.map(t => ({ ...t, count: 0 }));
+
+  try{
+    const response = await fetch(CONFIG.popularToolsEndpoint);
+    const data = await response.json().catch(() => null);
+
+    if (response.ok && Array.isArray(data?.popularTools) && data.popularTools.length){
+      const countMap = {};
+      data.popularTools.forEach(item => { countMap[item.tool] = item.count || 0; });
+
+      ranking = HOME_TOOL_CATALOG.map(t => ({ ...t, count: countMap[t.id] || 0 }));
+      ranking.sort((a, b) => b.count - a.count);
+    }
+  }catch{
+    // Gagal ambil data popularitas -> tetap pakai urutan default.
+  }
+
+  grid.innerHTML = ranking
+    .slice(0, HOME_POPULAR_LIMIT)
+    .map(toolCardHTML)
+    .join("");
 }
 
 function setPage(route){
@@ -804,17 +872,23 @@ document.addEventListener("DOMContentLoaded", () => {
   // Track pengunjung sekali tiap kali web dibuka/di-reload.
   trackEvent({ event: "visit" });
 
+  // Render daftar "Tools Populer" di beranda berdasarkan data pemakaian asli.
+  renderPopularTools();
+
     const bigNotice = $("#bigNotice");
   if (bigNotice) {
     bigNotice.addEventListener("click", () => bigNotice.classList.remove("show"));
   }
 
-  document.querySelectorAll(".tool-card").forEach(card => {
-    card.addEventListener("click", () => {
-      const tool = card.dataset.tool;
-      if (!tool) return;
-      openTool(tool);
-    });
+  // Delegated click listener: tetap jalan walau tool-card di-render ulang
+  // secara dinamis (misal daftar "Tools Populer" di beranda yang di-refresh
+  // dari data statistik), karena listener-nya nempel di document, bukan
+  // di masing-masing tombol satu-satu.
+  document.addEventListener("click", (event) => {
+    const card = event.target.closest(".tool-card[data-tool]");
+    if (!card) return;
+    const tool = card.dataset.tool;
+    if (tool) openTool(tool);
   });
 
   document.querySelectorAll("[data-page]").forEach(button => {
@@ -892,6 +966,8 @@ function openRemoveBg() {
     );
 
   if (!modal) return;
+
+  trackEvent({ event: "tool", tool: "removebg" });
 
   modal.classList.add("active");
 }
