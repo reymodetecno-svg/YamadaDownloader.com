@@ -31,11 +31,6 @@ const tools = {
     desc: "Download Reels atau video Instagram dari link publik.",
     icon:  "𖦹"
   }
-   pinterest: {
-    title: "Pinterest Downloader",
-    desc: "Download video Pinterest dari link publik yang kamu masukkan.",
-    icon: "📌"
-  }
 };
 
 const $ = (s) => document.querySelector(s);
@@ -73,15 +68,7 @@ function openTool(name){
   $("#videoUrl").value = "";
   $("#resultBox").hidden = true;
   $("#resultBox").className = "result-box";
- const toolNames = {
-  youtube: "YouTube",
-  tiktok: "TikTok",
-  instagram: "Instagram",
-  pinterest: "Pinterest"
-};
-
-$("#videoUrl").placeholder =
-  `Tempel link ${toolNames[name] || name} di sini...`;
+  $("#videoUrl").placeholder = `Tempel link ${name === "youtube" ? "YouTube" : name === "tiktok" ? "TikTok" : "Instagram"} di sini...`;
   setPage("tool");
   setTimeout(() => $("#videoUrl").focus(), 300);
 }
