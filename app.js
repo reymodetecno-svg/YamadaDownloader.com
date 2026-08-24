@@ -14,7 +14,13 @@ const CONFIG = {
   pinterestEndpoint: "/api/download-pinterest",
   // Proxy same-origin supaya file video langsung kedownload (attachment),
   // bukan cuma dibuka sebagai halaman/pemutar video.
-  proxyEndpoint: "/api/fetch"
+  proxyEndpoint: "/api/fetch",
+
+  // Panel admin
+  trackEndpoint: "/api/track",
+  adminAuthEndpoint: "/api/admin-auth",
+  adminStatsEndpoint: "/api/admin-stats",
+  adminTokenStorageKey: "yamada_admin_token"
 };
 
 const tools = {
@@ -61,6 +67,22 @@ function showBigNotice(message){
   window.bigNoticeTimer = setTimeout(() => el.classList.remove("show"), 3000);
 }
 
+// Fire-and-forget tracking buat statistik di Panel Admin.
+// Sengaja gak di-await dan errornya diabaikan supaya gak pernah
+// mengganggu/memperlambat fitur download utama.
+function trackEvent(payload){
+  try{
+    fetch(CONFIG.trackEndpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      keepalive: true
+    }).catch(() => {});
+  }catch{
+    // no-op
+  }
+}
+
 function setPage(route){
   $$(".page").forEach(p => p.classList.toggle("active", p.dataset.route === route));
   $$(".nav-item").forEach(n => n.classList.toggle("active", n.dataset.page === route));
@@ -87,8 +109,159 @@ function openTool(name){
   // Simpan tool aktif supaya downloadVideo() tahu harus panggil endpoint yang mana.
   $("#downloadBtn").dataset.activeTool = name;
 
+  trackEvent({ event: "tool", tool: name });
+
   setPage("tool");
   setTimeout(() => $("#videoUrl").focus(), 300);
+}
+
+/* ===================== PANEL ADMIN ===================== */
+
+function getAdminToken(){
+  return sessionStorage.getItem(CONFIG.adminTokenStorageKey) || "";
+}
+
+function setAdminToken(token){
+  if (token) sessionStorage.setItem(CONFIG.adminTokenStorageKey, token);
+  else sessionStorage.removeItem(CONFIG.adminTokenStorageKey);
+}
+
+function showPanelLocked(errorMessage){
+  $("#panelLocked").hidden = false;
+  $("#panelDashboard").hidden = true;
+
+  const errorEl = $("#panelError");
+  if (errorMessage){
+    errorEl.textContent = errorMessage;
+    errorEl.hidden = false;
+  } else {
+    errorEl.hidden = true;
+    errorEl.textContent = "";
+  }
+}
+
+function showPanelDashboard(){
+  $("#panelLocked").hidden = true;
+  $("#panelDashboard").hidden = false;
+}
+
+// Dipanggil setiap kali user membuka menu "Panel" di bottom nav.
+async function openPanel(){
+  setPage("panel");
+
+  const token = getAdminToken();
+  if (!token){
+    showPanelLocked();
+    setTimeout(() => $("#panelKeyInput")?.focus(), 250);
+    return;
+  }
+
+  // Ada token tersimpan dari sesi sebelumnya -> coba langsung tampilkan
+  // dashboard, tapi tetap validasi ke server (kalau token sudah expired,
+  // server bakal nolak dan kita balik lagi ke form key).
+  showPanelDashboard();
+  await loadPanelStats();
+}
+
+async function unlockPanel(){
+  const input = $("#panelKeyInput");
+  const key = input.value.trim();
+  const btn = $("#panelUnlockBtn");
+
+  if (!key){
+    showPanelLocked("Key gak boleh kosong.");
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = "<span>⏳</span> Memeriksa...";
+
+  try{
+    const response = await fetch(CONFIG.adminAuthEndpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key })
+    });
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok || !data.token){
+      showPanelLocked(data.error || "Key salah.");
+      return;
+    }
+
+    setAdminToken(data.token);
+    input.value = "";
+    showPanelDashboard();
+    await loadPanelStats();
+  }catch(error){
+    showPanelLocked("Gagal terhubung ke server: " + error.message);
+  }finally{
+    btn.disabled = false;
+    btn.innerHTML = "<span>🔒</span> Buka Panel";
+  }
+}
+
+function logoutPanel(){
+  setAdminToken(null);
+  showPanelLocked();
+}
+
+async function loadPanelStats(){
+  const token = getAdminToken();
+  const list = $("#popularToolsList");
+  const kvNotice = $("#panelKvNotice");
+
+  list.innerHTML = "<p class=\"helper\">Memuat data...</p>";
+  kvNotice.hidden = true;
+
+  try{
+    const response = await fetch(CONFIG.adminStatsEndpoint, {
+      method: "GET",
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    if (response.status === 401){
+      // Token gak valid / expired -> paksa login ulang.
+      setAdminToken(null);
+      showPanelLocked("Sesi kamu berakhir, masukkan key lagi.");
+      return;
+    }
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok){
+      list.innerHTML = `<p class="helper">Gagal memuat data: ${escapeHtml(data.error || "Unknown error")}</p>`;
+      return;
+    }
+
+    $("#statTotalVisits").textContent = (data.totalVisits ?? 0).toLocaleString("id-ID");
+
+    const tools = Array.isArray(data.popularTools) ? data.popularTools : [];
+    $("#statToolsUsed").textContent = tools
+      .reduce((sum, t) => sum + (t.count || 0), 0)
+      .toLocaleString("id-ID");
+
+    if (!tools.length){
+      list.innerHTML = "<p class=\"helper\">Belum ada data pemakaian tools.</p>";
+    } else {
+      list.innerHTML = tools
+        .map((t, i) => `
+          <div class="popular-tool-row">
+            <span><span class="popular-tool-rank">#${i + 1}</span><b>${escapeHtml(t.tool)}</b></span>
+            <span>${(t.count || 0).toLocaleString("id-ID")}x</span>
+          </div>
+        `)
+        .join("");
+    }
+
+    if (data.kvConfigured === false && data.notice){
+      kvNotice.textContent = data.notice;
+      kvNotice.hidden = false;
+    }
+  }catch(error){
+    list.innerHTML = `<p class="helper">Gagal terhubung ke server: ${escapeHtml(error.message)}</p>`;
+  }
 }
 
 async function pasteUrl(){
@@ -597,9 +770,39 @@ document.addEventListener("DOMContentLoaded", () => {
     button.addEventListener("click", () => {
       const page = button.dataset.page;
       if (!page) return;
+      // "panel" butuh cek key dulu, jadi ditangani terpisah lewat openPanel().
+      if (page === "panel"){
+        openPanel();
+        return;
+      }
       setPage(page);
     });
   });
+
+  const panelUnlockBtn = $("#panelUnlockBtn");
+  if (panelUnlockBtn){
+    panelUnlockBtn.addEventListener("click", unlockPanel);
+  }
+
+  const panelKeyInput = $("#panelKeyInput");
+  if (panelKeyInput){
+    panelKeyInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") unlockPanel();
+    });
+  }
+
+  const panelRefreshBtn = $("#panelRefreshBtn");
+  if (panelRefreshBtn){
+    panelRefreshBtn.addEventListener("click", loadPanelStats);
+  }
+
+  const panelLogoutBtn = $("#panelLogoutBtn");
+  if (panelLogoutBtn){
+    panelLogoutBtn.addEventListener("click", logoutPanel);
+  }
+
+  // Track pengunjung sekali tiap kali web dibuka/di-reload.
+  trackEvent({ event: "visit" });
 
     const bigNotice = $("#bigNotice");
   if (bigNotice) {
