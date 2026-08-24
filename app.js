@@ -10,6 +10,8 @@ const CONFIG = {
   customerService: "https://wa.me/6283869485575",
   // Vercel Function akan membaca DOWNLOADER_API_URL dari environment.
   downloadEndpoint: "/api/download",
+  // Endpoint khusus Pinterest (format respons API-nya beda dari aio).
+  pinterestEndpoint: "/api/download-pinterest",
   // Proxy same-origin supaya file video langsung kedownload (attachment),
   // bukan cuma dibuka sebagai halaman/pemutar video.
   proxyEndpoint: "/api/fetch"
@@ -30,6 +32,11 @@ const tools = {
     title: "Instagram Downloader",
     desc: "Download Reels atau video Instagram dari link publik.",
     icon:  "𖦹"
+  },
+  pinterest: {
+    title: "Pinterest Downloader",
+    desc: "Download video atau gambar Pinterest dari link publik.",
+    icon:  "📌"
   }
 };
 
@@ -68,7 +75,18 @@ function openTool(name){
   $("#videoUrl").value = "";
   $("#resultBox").hidden = true;
   $("#resultBox").className = "result-box";
-  $("#videoUrl").placeholder = `Tempel link ${name === "youtube" ? "YouTube" : name === "tiktok" ? "TikTok" : "Instagram"} di sini...`;
+
+  const labelMap = {
+    youtube: "YouTube",
+    tiktok: "TikTok",
+    instagram: "Instagram",
+    pinterest: "Pinterest"
+  };
+  $("#videoUrl").placeholder = `Tempel link ${labelMap[name] || ""} di sini...`;
+
+  // Simpan tool aktif supaya downloadVideo() tahu harus panggil endpoint yang mana.
+  $("#downloadBtn").dataset.activeTool = name;
+
   setPage("tool");
   setTimeout(() => $("#videoUrl").focus(), 300);
 }
@@ -82,6 +100,11 @@ async function pasteUrl(){
   }catch{
     showToast("Clipboard tidak bisa dibaca. Tempel link secara manual.");
   }
+}
+
+function getActiveDownloadEndpoint(){
+  const activeTool = $("#downloadBtn")?.dataset.activeTool;
+  return activeTool === "pinterest" ? CONFIG.pinterestEndpoint : CONFIG.downloadEndpoint;
 }
 
 async function downloadVideo(){
@@ -104,7 +127,7 @@ async function downloadVideo(){
   box.innerHTML = "Sedang mengambil informasi video...";
 
   try{
-    const response = await fetch(CONFIG.downloadEndpoint, {
+    const response = await fetch(getActiveDownloadEndpoint(), {
       method:"POST",
       headers:{"Content-Type":"application/json"},
       body:JSON.stringify({url})
@@ -155,16 +178,29 @@ function renderDownloadResult(data){
     ? `<small>Creator: ${escapeHtml(data.author)}</small>`
     : "";
 
-  const mediaPreview = items[0].url
-    ? `
-      <video
-        controls
-        playsinline
-        preload="metadata"
-        style="width:100%;max-height:420px;border-radius:14px;margin-top:12px;background:#000"
-        src="${escapeAttr(items[0].url)}">
-      </video>
-    `
+  const firstItem = items[0];
+  const isImage = /gambar|image|jpg|jpeg|png|webp/i.test(
+    `${firstItem?.type || ""} ${firstItem?.extension || ""}`
+  );
+
+  const mediaPreview = firstItem?.url
+    ? (isImage
+        ? `
+          <img
+            src="${escapeAttr(firstItem.url)}"
+            alt="${escapeAttr(data.title || "Preview")}"
+            style="width:100%;max-height:420px;object-fit:contain;border-radius:14px;margin-top:12px;background:#000"
+          >
+        `
+        : `
+          <video
+            controls
+            playsinline
+            preload="metadata"
+            style="width:100%;max-height:420px;border-radius:14px;margin-top:12px;background:#000"
+            src="${escapeAttr(firstItem.url)}">
+          </video>
+        `)
     : "";
 
   box.innerHTML = `
@@ -228,7 +264,7 @@ async function downloadSelectedMedia(
   button.innerHTML = "<span>⏳ Memproses...</span>";
 
   try {
-    const response = await fetch(CONFIG.downloadEndpoint, {
+    const response = await fetch(getActiveDownloadEndpoint(), {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
