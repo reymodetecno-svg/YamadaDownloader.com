@@ -1,5 +1,23 @@
 export const config = { runtime: "edge" };
 
+import { getMaintenanceSettings, isPlatformEnabled, DEFAULT_PLATFORMS } from "./_lib/settings.mjs";
+import { trackApiRequest, trackApiSuccess, trackApiFailure, trackDownloadCompleted } from "./_lib/stats.mjs";
+
+// Tebak platform dari URL sebagai jaga-jaga kalau body.platform gak dikirim
+// frontend (mis. dipanggil langsung lewat API tanpa lewat UI).
+function detectPlatformFromUrl(url) {
+  try {
+    const host = new URL(url).hostname.toLowerCase();
+    if (host.includes("tiktok.com")) return "tiktok";
+    if (host.includes("instagram.com")) return "instagram";
+    if (host.includes("youtube.com") || host.includes("youtu.be")) return "youtube";
+    if (host.includes("pinterest.")) return "pinterest";
+  } catch {
+    // no-op
+  }
+  return null;
+}
+
 export default async function handler(request) {
   if (request.method !== "POST") {
     return Response.json({ error: "Method not allowed" }, { status: 405 });
@@ -17,7 +35,31 @@ export default async function handler(request) {
     return Response.json({ error: "URL video tidak valid." }, { status: 400 });
   }
 
+  // Mode maintenance -> tolak semua request duluan, jangan sampai kehitung
+  // sebagai API request/gagal di statistik karena memang belum diproses.
+  const maintenance = await getMaintenanceSettings();
+  if (maintenance.enabled) {
+    return Response.json(
+      { error: maintenance.message, maintenance: true },
+      { status: 503, headers: { "Cache-Control": "no-store" } }
+    );
+  }
+
+  const platform =
+    (typeof body?.platform === "string" && DEFAULT_PLATFORMS[body.platform] ? body.platform : null) ||
+    detectPlatformFromUrl(url);
+
+  if (platform && !(await isPlatformEnabled(platform))) {
+    return Response.json(
+      { error: `Downloader ${platform} sedang dinonaktifkan oleh admin.`, disabled: true },
+      { status: 403, headers: { "Cache-Control": "no-store" } }
+    );
+  }
+
   const apiBase = process.env.DOWNLOADER_API_URL || "https://api.nexray.eu.cc/downloader/aio";
+
+  // Dari sini request beneran diteruskan ke API downloader -> baru dihitung.
+  await trackApiRequest();
 
   try {
     const apiUrl = `${apiBase}?url=${encodeURIComponent(url)}`;
@@ -28,9 +70,13 @@ export default async function handler(request) {
     const data = await upstream.json().catch(() => null);
 
     if (!upstream.ok) {
-      return Response.json({ error: data?.message || data?.error || `Nexray API error (${upstream.status})` }, { status: 502 });
+      const message = data?.message || data?.error || `Nexray API error (${upstream.status})`;
+      await trackApiFailure(platform, message);
+      return Response.json({ error: message }, { status: 502 });
     }
     if (!data?.status || !data?.result) {
+      // Bukan API-nya down, cuma link-nya gak ketemu medianya -> tetap "online".
+      await trackApiSuccess(platform);
       return Response.json({ error: data?.message || "API tidak menemukan media dari link tersebut." }, { status: 422 });
     }
 
@@ -47,14 +93,19 @@ export default async function handler(request) {
     }));
 
     if (!picker.length) {
+      await trackApiSuccess(platform);
       return Response.json({ error: "API berhasil dipanggil tetapi tidak ada media download." }, { status: 422 });
     }
+
+    await trackApiSuccess(platform);
 
     if (shouldDownload) {
       const chosen = picker[mediaIndex];
       if (!chosen || !chosen.url) {
         return Response.json({ error: "Format yang dipilih tidak ditemukan." }, { status: 422 });
       }
+      // Ini titik dimana user beneran dapat link file final -> hitung "download".
+      await trackDownloadCompleted();
       return Response.json({
         url: chosen.url,
         extension: chosen.extension,
@@ -72,6 +123,7 @@ export default async function handler(request) {
       picker
     }, { status: 200, headers: { "Cache-Control": "no-store" } });
   } catch (error) {
+    await trackApiFailure(platform, error.message);
     return Response.json({ error: `Tidak dapat terhubung ke Nexray API: ${error.message}` }, { status: 502 });
   }
 }
