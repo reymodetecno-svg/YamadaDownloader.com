@@ -39,6 +39,84 @@
   .popular-tool-row b{ text-transform:capitalize; }
   .popular-tool-rank{ opacity:0.5; font-size:12px; margin-right:8px; }
   .panel-logout{ width:100%; text-align:center; }
+
+  /* ===== Dashboard tambahan (Total Download, Hari Ini, API Request, dst) ===== */
+  .panel-stat-card-wide{ grid-column:1 / -1; }
+  .panel-stat-sub{ opacity:0.55; font-size:11px; }
+  .panel-status-badge{
+    display:inline-flex; align-items:center; gap:6px; width:fit-content;
+    font-size:13px; font-weight:800; padding:5px 10px; border-radius:99px;
+  }
+  .panel-status-online{ background:rgba(34,160,107,0.16); color:#22a06b; }
+  .panel-status-offline{ background:rgba(231,76,60,0.16); color:#e74c3c; }
+  .panel-status-unknown{ background:rgba(255,255,255,0.08); color:#9fb3c2; }
+
+  /* ===== Downloader Manager ===== */
+  .panel-helper-left{ text-align:left; margin:0; }
+  .panel-field-label{ font-size:11px; font-weight:800; opacity:0.7; letter-spacing:.4px; }
+  .platform-manager-list{ display:flex; flex-direction:column; gap:10px; }
+  .platform-manager-row{
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    background:rgba(255,255,255,0.04);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:14px; padding:10px 12px;
+  }
+  .platform-manager-info{ display:flex; align-items:center; gap:10px; min-width:0; flex:1; }
+  .platform-manager-icon{ width:34px; height:34px; border-radius:10px; object-fit:cover; flex:none; }
+  .platform-manager-id{ opacity:0.5; font-size:10px; text-transform:uppercase; letter-spacing:.5px; }
+  .platform-name-input{
+    display:block; width:100%; border:1px solid rgba(255,255,255,0.12);
+    background:rgba(255,255,255,0.03); color:inherit; border-radius:8px;
+    padding:6px 8px; font-size:13px; font-weight:700; margin-bottom:2px;
+  }
+  .platform-manager-row.platform-disabled{ opacity:0.55; }
+
+  /* Toggle switch ON/OFF dipakai di Downloader Manager & Maintenance Mode */
+  .toggle-switch{ position:relative; display:inline-block; width:44px; height:26px; flex:none; }
+  .toggle-switch input{ opacity:0; width:0; height:0; }
+  .toggle-slider{
+    position:absolute; cursor:pointer; inset:0; background:rgba(255,255,255,0.18);
+    border-radius:99px; transition:.2s;
+  }
+  .toggle-slider::before{
+    content:""; position:absolute; height:20px; width:20px; left:3px; top:3px;
+    background:#fff; border-radius:50%; transition:.2s;
+  }
+  .toggle-switch input:checked + .toggle-slider{ background:#3ecf8e; }
+  .toggle-switch input:checked + .toggle-slider::before{ transform:translateX(18px); }
+
+  /* ===== Maintenance Mode (admin panel) ===== */
+  .maintenance-manager-row{
+    display:flex; align-items:center; justify-content:space-between;
+    background:rgba(255,255,255,0.04);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:14px; padding:12px 14px;
+  }
+  .maintenance-manager-label{ font-size:13px; font-weight:800; }
+  .maintenance-message-input{
+    width:100%; resize:vertical; border:1px solid rgba(255,255,255,0.12);
+    background:rgba(255,255,255,0.03); color:inherit; border-radius:12px;
+    padding:10px 12px; font-size:13px; font-family:inherit;
+  }
+
+  /* ===== Overlay Maintenance Mode (tampilan pengunjung) ===== */
+  .maintenance-overlay{
+    position:fixed; inset:0; z-index:200; display:flex; align-items:center;
+    justify-content:center; padding:24px;
+    background:rgba(10,20,30,0.72); backdrop-filter:blur(6px);
+  }
+  .maintenance-overlay[hidden]{ display:none; }
+  .maintenance-box{
+    width:min(92vw,380px); background:#fff; border-radius:22px; padding:28px 24px;
+    text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.35); color:#15283b;
+  }
+  .maintenance-icon{ font-size:38px; margin-bottom:8px; }
+  .maintenance-box h2{ margin:0 0 8px; font-size:18px; }
+  .maintenance-box p{ margin:0 0 18px; font-size:13px; color:#5c7183; line-height:1.5; word-break:break-word; }
+  .maintenance-box .primary-btn{ width:100%; }
+  .maintenance-box .back-btn{ width:100%; margin-top:6px; }
+  body.dark-mode .maintenance-box{ background:#16232f; color:#eaf3fb; }
+  body.dark-mode .maintenance-box p{ color:#9fb3c2; }
 </style>
 </head>
 <body>
@@ -435,6 +513,27 @@
               <span class="panel-stat-label">Tools Dipakai</span>
               <span id="statToolsUsed" class="panel-stat-value">0</span>
             </div>
+            <div class="panel-stat-card">
+              <span class="panel-stat-label">Total Download</span>
+              <span id="statTotalDownloads" class="panel-stat-value">0</span>
+            </div>
+            <div class="panel-stat-card">
+              <span class="panel-stat-label">Download Hari Ini</span>
+              <span id="statDownloadsToday" class="panel-stat-value">0</span>
+            </div>
+            <div class="panel-stat-card">
+              <span class="panel-stat-label">API Request</span>
+              <span id="statApiRequests" class="panel-stat-value">0</span>
+            </div>
+            <div class="panel-stat-card">
+              <span class="panel-stat-label">Request Gagal</span>
+              <span id="statApiFailed" class="panel-stat-value">0</span>
+            </div>
+            <div class="panel-stat-card panel-stat-card-wide">
+              <span class="panel-stat-label">Status API</span>
+              <span id="statApiStatus" class="panel-status-badge panel-status-unknown">● Belum ada data</span>
+              <small id="statApiStatusTime" class="panel-stat-sub"></small>
+            </div>
           </div>
 
           <div class="panel-section-title">Tools Paling Populer</div>
@@ -445,6 +544,87 @@
           <p id="panelKvNotice" class="helper panel-notice" hidden></p>
 
           <button id="panelRefreshBtn" class="primary-btn" type="button">↻ Refresh Data</button>
+
+          <div class="panel-section-title">Downloader Manager</div>
+          <p class="helper panel-helper-left">Nyalakan/matikan downloader per platform dan atur nama tampilannya.</p>
+
+          <div class="platform-manager-list">
+            <div class="platform-manager-row" data-platform-row="tiktok">
+              <div class="platform-manager-info">
+                <img src="Tiktok.jpg" alt="" class="platform-manager-icon">
+                <div>
+                  <input type="text" class="platform-name-input" data-platform="tiktok" maxlength="40" placeholder="Nama platform">
+                  <div class="platform-manager-id">tiktok</div>
+                </div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" class="platform-toggle" data-platform="tiktok" checked>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+
+            <div class="platform-manager-row" data-platform-row="instagram">
+              <div class="platform-manager-info">
+                <img src="Instagram.jpg" alt="" class="platform-manager-icon">
+                <div>
+                  <input type="text" class="platform-name-input" data-platform="instagram" maxlength="40" placeholder="Nama platform">
+                  <div class="platform-manager-id">instagram</div>
+                </div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" class="platform-toggle" data-platform="instagram" checked>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+
+            <div class="platform-manager-row" data-platform-row="youtube">
+              <div class="platform-manager-info">
+                <img src="Youtube.jpg" alt="" class="platform-manager-icon">
+                <div>
+                  <input type="text" class="platform-name-input" data-platform="youtube" maxlength="40" placeholder="Nama platform">
+                  <div class="platform-manager-id">youtube</div>
+                </div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" class="platform-toggle" data-platform="youtube" checked>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+
+            <div class="platform-manager-row" data-platform-row="pinterest">
+              <div class="platform-manager-info">
+                <img src="Pinterest.jpg" alt="" class="platform-manager-icon">
+                <div>
+                  <input type="text" class="platform-name-input" data-platform="pinterest" maxlength="40" placeholder="Nama platform">
+                  <div class="platform-manager-id">pinterest</div>
+                </div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" class="platform-toggle" data-platform="pinterest" checked>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <button id="platformSaveBtn" class="primary-btn" type="button">💾 Simpan Downloader Manager</button>
+          <p id="platformSaveStatus" class="helper panel-notice" hidden></p>
+
+          <div class="panel-section-title">Maintenance Mode</div>
+
+          <div class="maintenance-manager-row">
+            <span class="maintenance-manager-label">Mode Maintenance</span>
+            <label class="toggle-switch">
+              <input type="checkbox" id="maintenanceToggle">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <label for="maintenanceMessageInput" class="panel-field-label">Pesan Maintenance</label>
+          <textarea id="maintenanceMessageInput" class="maintenance-message-input" rows="3" maxlength="500" placeholder="Website sedang dalam perbaikan..."></textarea>
+
+          <button id="maintenanceSaveBtn" class="primary-btn" type="button">💾 Simpan Maintenance Mode</button>
+          <p id="maintenanceSaveStatus" class="helper panel-notice" hidden></p>
+
           <button id="panelLogoutBtn" class="back-btn panel-logout" type="button">Keluar dari Panel</button>
         </div>
       </section>
@@ -466,6 +646,17 @@
       <p id="bigNoticeText">Sudah Didownload silahkan cek Chrome</p>
     </div>
   </div>
+
+  <div id="maintenanceOverlay" class="maintenance-overlay" hidden role="alertdialog" aria-modal="true">
+    <div class="maintenance-box">
+      <div class="maintenance-icon">🛠️</div>
+      <h2>Sedang Maintenance</h2>
+      <p id="maintenanceMessage">Website sedang dalam perbaikan. Silakan coba lagi beberapa saat lagi.</p>
+      <button id="maintenanceRetryBtn" class="primary-btn" type="button">↻ Coba Lagi</button>
+      <button id="maintenanceAdminLink" class="back-btn" type="button">Saya admin, buka Panel Login</button>
+    </div>
+  </div>
+
  <script>
   // Pengaman agar splash tidak pernah stuck
   setTimeout(() => {
