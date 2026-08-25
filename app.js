@@ -23,8 +23,26 @@ const CONFIG = {
   adminTokenStorageKey: "yamada_admin_token",
 
   // Data publik buat nampilin "Tools Populer" di beranda (gak butuh login).
-  popularToolsEndpoint: "/api/popular-tools"
+  popularToolsEndpoint: "/api/popular-tools",
+
+  // Downloader Manager (ON/OFF + nama platform) & Maintenance Mode.
+  settingsEndpoint: "/api/settings",
+  adminSettingsEndpoint: "/api/admin-settings"
 };
+
+// Nama platform default (dipakai selama /api/settings belum sempat dimuat,
+// atau kalau KV belum disetup di server).
+const DEFAULT_PLATFORM_SETTINGS = {
+  tiktok: { enabled: true, name: "TikTok" },
+  instagram: { enabled: true, name: "Instagram" },
+  youtube: { enabled: true, name: "YouTube" },
+  pinterest: { enabled: true, name: "Pinterest" }
+};
+
+// State pengaturan yang dimuat dari /api/settings, dipakai buat nge-render
+// ulang tool card & cek ON/OFF sebelum request download dikirim.
+let platformSettings = { ...DEFAULT_PLATFORM_SETTINGS };
+let maintenanceSettings = { enabled: false, message: "" };
 
 const tools = {
   youtube: {
@@ -111,11 +129,15 @@ function toolCardHTML(tool){
     ? `type="button" onclick="openRemoveBg()"`
     : `data-tool="${tool.id}"`;
 
+  const disabledAttrs = tool.disabled
+    ? `class="tool-card tool-card-disabled" aria-disabled="true"`
+    : `class="tool-card"`;
+
   return `
-    <button class="tool-card" ${clickAttr}>
+    <button ${disabledAttrs} ${clickAttr}>
       ${iconHTML}
-      <strong>${tool.title}</strong>
-      <small>${tool.desc}</small>
+      <strong>${escapeHtml(tool.title)}</strong>
+      <small>${tool.disabled ? "Sedang dinonaktifkan" : tool.desc}</small>
       <span class="arrow">→</span>
     </button>
   `;
@@ -145,10 +167,38 @@ async function renderPopularTools(){
     // Gagal ambil data popularitas -> tetap pakai urutan default.
   }
 
+  // Terapkan nama & status ON/OFF dari Downloader Manager (kalau ada).
+  ranking = ranking.map(t => {
+    const setting = platformSettings[t.id];
+    if (!setting) return t;
+    return { ...t, title: setting.name || t.title, disabled: setting.enabled === false };
+  });
+
   grid.innerHTML = ranking
     .slice(0, HOME_POPULAR_LIMIT)
     .map(toolCardHTML)
     .join("");
+}
+
+// Terapkan Downloader Manager (ON/OFF + nama platform) ke semua kartu tool
+// yang statis di HTML (halaman "All Tools") dan ke dict `tools` yang dipakai
+// openTool(). Dipanggil setelah /api/settings selesai dimuat, dan lagi
+// setelah admin nyimpen perubahan dari Panel Admin.
+function applyPlatformSettingsToUI(){
+  Object.keys(DEFAULT_PLATFORM_SETTINGS).forEach(id => {
+    const setting = platformSettings[id] || DEFAULT_PLATFORM_SETTINGS[id];
+    if (tools[id]) tools[id].title = setting.name || tools[id].title;
+
+    document.querySelectorAll(`.tool-card[data-tool="${id}"]`).forEach(card => {
+      const titleEl = card.querySelector("strong");
+      if (titleEl) titleEl.textContent = setting.name || titleEl.textContent;
+
+      card.classList.toggle("tool-card-disabled", setting.enabled === false);
+      card.toggleAttribute("aria-disabled", setting.enabled === false);
+    });
+  });
+
+  renderPopularTools();
 }
 
 function setPage(route){
@@ -159,6 +209,14 @@ function setPage(route){
 
 function openTool(name){
   const tool = tools[name];
+  if (!tool) return;
+
+  const setting = platformSettings[name];
+  if (setting && setting.enabled === false){
+    showToast(`${setting.name || tool.title} sedang dinonaktifkan oleh admin.`);
+    return;
+  }
+
   $("#toolTitle").textContent = tool.title;
   $("#toolDescription").textContent = tool.desc;
   $("#toolBigIcon").textContent = tool.icon;
@@ -228,7 +286,7 @@ async function openPanel(){
   // dashboard, tapi tetap validasi ke server (kalau token sudah expired,
   // server bakal nolak dan kita balik lagi ke form key).
   showPanelDashboard();
-  await loadPanelStats();
+  await Promise.all([loadPanelStats(), loadAdminSettings()]);
 }
 
 async function unlockPanel(){
@@ -305,15 +363,23 @@ async function loadPanelStats(){
 
     $("#statTotalVisits").textContent = (data.totalVisits ?? 0).toLocaleString("id-ID");
 
-    const tools = Array.isArray(data.popularTools) ? data.popularTools : [];
-    $("#statToolsUsed").textContent = tools
+    const popularTools = Array.isArray(data.popularTools) ? data.popularTools : [];
+    $("#statToolsUsed").textContent = popularTools
       .reduce((sum, t) => sum + (t.count || 0), 0)
       .toLocaleString("id-ID");
 
-    if (!tools.length){
+    // Statistik Dashboard: Total Download, Download Hari Ini, API Request,
+    // Request Gagal, Status API.
+    $("#statTotalDownloads").textContent = (data.totalDownloads ?? 0).toLocaleString("id-ID");
+    $("#statDownloadsToday").textContent = (data.downloadsToday ?? 0).toLocaleString("id-ID");
+    $("#statApiRequests").textContent = (data.apiRequests ?? 0).toLocaleString("id-ID");
+    $("#statApiFailed").textContent = (data.apiFailed ?? 0).toLocaleString("id-ID");
+    renderApiStatusBadge(data.apiStatus);
+
+    if (!popularTools.length){
       list.innerHTML = "<p class=\"helper\">Belum ada data pemakaian tools.</p>";
     } else {
-      list.innerHTML = tools
+      list.innerHTML = popularTools
         .map((t, i) => `
           <div class="popular-tool-row">
             <span><span class="popular-tool-rank">#${i + 1}</span><b>${escapeHtml(t.tool)}</b></span>
@@ -332,6 +398,222 @@ async function loadPanelStats(){
   }
 }
 
+function renderApiStatusBadge(apiStatus){
+  const badge = $("#statApiStatus");
+  const timeEl = $("#statApiStatusTime");
+  if (!badge) return;
+
+  const status = apiStatus?.status || "unknown";
+  badge.classList.remove("panel-status-online", "panel-status-offline", "panel-status-unknown");
+
+  if (status === "online"){
+    badge.classList.add("panel-status-online");
+    badge.textContent = "● Online";
+  } else if (status === "offline"){
+    badge.classList.add("panel-status-offline");
+    badge.textContent = "● Offline";
+  } else {
+    badge.classList.add("panel-status-unknown");
+    badge.textContent = "● Belum ada data";
+  }
+
+  if (timeEl){
+    timeEl.textContent = apiStatus?.at
+      ? `Terakhir dicek: ${new Date(apiStatus.at).toLocaleString("id-ID")}`
+      : "";
+  }
+}
+
+/* ===================== DOWNLOADER MANAGER & MAINTENANCE (ADMIN) ===================== */
+
+// Ambil pengaturan Downloader Manager + Maintenance Mode dari server dan
+// isikan ke form Panel Admin.
+async function loadAdminSettings(){
+  const token = getAdminToken();
+  if (!token) return;
+
+  try{
+    const response = await fetch(CONFIG.adminSettingsEndpoint, {
+      method: "GET",
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    if (response.status === 401) return; // biarkan loadPanelStats() yang menangani sesi expired
+
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) return;
+
+    if (data.platforms){
+      platformSettings = data.platforms;
+      applyPlatformSettingsToUI();
+
+      Object.keys(DEFAULT_PLATFORM_SETTINGS).forEach(id => {
+        const setting = data.platforms[id];
+        if (!setting) return;
+
+        const toggle = document.querySelector(`.platform-toggle[data-platform="${id}"]`);
+        const nameInput = document.querySelector(`.platform-name-input[data-platform="${id}"]`);
+        const row = document.querySelector(`[data-platform-row="${id}"]`);
+
+        if (toggle) toggle.checked = setting.enabled !== false;
+        if (nameInput) nameInput.value = setting.name || "";
+        if (row) row.classList.toggle("platform-disabled", setting.enabled === false);
+      });
+    }
+
+    if (data.maintenance){
+      maintenanceSettings = data.maintenance;
+
+      const toggle = $("#maintenanceToggle");
+      const messageInput = $("#maintenanceMessageInput");
+      if (toggle) toggle.checked = Boolean(data.maintenance.enabled);
+      if (messageInput) messageInput.value = data.maintenance.message || "";
+    }
+  }catch{
+    // Kalau gagal, form biarin nampilin data terakhir yang berhasil dimuat.
+  }
+}
+
+// Simpan perubahan ke server. `payload` cuma berisi bagian yang mau diubah
+// (platforms saja, atau maintenance saja).
+async function saveAdminSettings(payload, statusElId){
+  const token = getAdminToken();
+  const statusEl = statusElId ? $(statusElId) : null;
+
+  if (!token){
+    showToast("Sesi admin gak ditemukan, silakan login ulang.");
+    return;
+  }
+
+  try{
+    const response = await fetch(CONFIG.adminSettingsEndpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await response.json().catch(() => ({}));
+
+    if (response.status === 401){
+      setAdminToken(null);
+      showPanelLocked("Sesi kamu berakhir, masukkan key lagi.");
+      return;
+    }
+
+    if (!response.ok){
+      throw new Error(data.error || "Gagal menyimpan pengaturan.");
+    }
+
+    if (data.platforms){
+      platformSettings = data.platforms;
+      applyPlatformSettingsToUI();
+    }
+    if (data.maintenance){
+      maintenanceSettings = data.maintenance;
+      applyMaintenanceState(data.maintenance);
+    }
+
+    if (statusEl){
+      statusEl.textContent = "✔ Pengaturan berhasil disimpan.";
+      statusEl.hidden = false;
+      setTimeout(() => { statusEl.hidden = true; }, 3000);
+    }
+    showToast("Pengaturan disimpan.");
+  }catch(error){
+    if (statusEl){
+      statusEl.textContent = `Gagal menyimpan: ${error.message}`;
+      statusEl.hidden = false;
+    }
+    showToast(`Gagal menyimpan: ${error.message}`);
+  }
+}
+
+function collectPlatformFormPayload(){
+  const platforms = {};
+  document.querySelectorAll(".platform-toggle").forEach(toggle => {
+    const id = toggle.dataset.platform;
+    if (!id) return;
+    const nameInput = document.querySelector(`.platform-name-input[data-platform="${id}"]`);
+    platforms[id] = {
+      enabled: toggle.checked,
+      name: nameInput ? nameInput.value.trim() : undefined
+    };
+  });
+  return platforms;
+}
+
+async function saveDownloaderManager(){
+  await saveAdminSettings({ platforms: collectPlatformFormPayload() }, "#platformSaveStatus");
+}
+
+async function saveMaintenanceMode(){
+  const toggle = $("#maintenanceToggle");
+  const messageInput = $("#maintenanceMessageInput");
+
+  await saveAdminSettings({
+    maintenance: {
+      enabled: toggle ? toggle.checked : false,
+      message: messageInput ? messageInput.value.trim() : ""
+    }
+  }, "#maintenanceSaveStatus");
+}
+
+/* ===================== MAINTENANCE MODE (PENGUNJUNG) ===================== */
+
+function applyMaintenanceState(maintenance){
+  maintenanceSettings = maintenance || { enabled: false, message: "" };
+
+  if (maintenanceSettings.enabled){
+    showMaintenanceOverlay(maintenanceSettings.message);
+  } else {
+    hideMaintenanceOverlay();
+  }
+}
+
+function showMaintenanceOverlay(message){
+  const overlay = $("#maintenanceOverlay");
+  if (!overlay) return;
+
+  const textEl = $("#maintenanceMessage");
+  if (textEl) textEl.textContent = message || "Website sedang dalam perbaikan. Silakan coba lagi beberapa saat lagi.";
+
+  overlay.hidden = false;
+  document.body.classList.add("maintenance-active");
+}
+
+function hideMaintenanceOverlay(){
+  const overlay = $("#maintenanceOverlay");
+  if (!overlay) return;
+
+  overlay.hidden = true;
+  document.body.classList.remove("maintenance-active");
+}
+
+// Dipanggil sekali saat web dibuka, dan lagi tiap kali tombol "Coba Lagi"
+// di-klik. Gagal fetch gak boleh sampai bikin web keblokir permanen, jadi
+// errornya didiamkan saja (web tetap bisa dipakai seperti biasa).
+async function loadPublicSettings(){
+  try{
+    const response = await fetch(CONFIG.settingsEndpoint, { cache: "no-store" });
+    const data = await response.json().catch(() => null);
+    if (!data) return;
+
+    if (data.platforms){
+      platformSettings = data.platforms;
+      applyPlatformSettingsToUI();
+    }
+
+    if (data.maintenance){
+      applyMaintenanceState(data.maintenance);
+    }
+  }catch{
+    // no-op — biarkan web tetap bisa dipakai kalau /api/settings gagal diambil.
+  }
+}
+
 async function pasteUrl(){
   try{
     const text = await navigator.clipboard.readText();
@@ -343,8 +625,12 @@ async function pasteUrl(){
   }
 }
 
+function getActivePlatform(){
+  return $("#downloadBtn")?.dataset.activeTool || "";
+}
+
 function getActiveDownloadEndpoint(){
-  const activeTool = $("#downloadBtn")?.dataset.activeTool;
+  const activeTool = getActivePlatform();
   return activeTool === "pinterest" ? CONFIG.pinterestEndpoint : CONFIG.downloadEndpoint;
 }
 
@@ -371,10 +657,19 @@ async function downloadVideo(){
     const response = await fetch(getActiveDownloadEndpoint(), {
       method:"POST",
       headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({url})
+      body:JSON.stringify({url, platform: getActivePlatform()})
     });
 
     const data = await response.json().catch(() => ({}));
+
+    // Server lagi mode maintenance -> tampilkan overlay maintenance,
+    // bukan pesan error box biasa.
+    if (response.status === 503 && data.maintenance){
+      applyMaintenanceState({ enabled: true, message: data.error });
+      box.hidden = true;
+      return;
+    }
+
     if(!response.ok || data.error){
       throw new Error(data.error || "Downloader API belum dikonfigurasi atau link tidak dapat diproses.");
     }
@@ -513,11 +808,17 @@ async function downloadSelectedMedia(
       body: JSON.stringify({
         url: originalUrl,
         download: true,
-        mediaIndex: mediaIndex
+        mediaIndex: mediaIndex,
+        platform: getActivePlatform()
       })
     });
 
     const data = await response.json().catch(() => ({}));
+
+    if (response.status === 503 && data.maintenance){
+      applyMaintenanceState({ enabled: true, message: data.error });
+      return;
+    }
 
     if (!response.ok) {
       throw new Error(
@@ -861,7 +1162,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const panelRefreshBtn = $("#panelRefreshBtn");
   if (panelRefreshBtn){
-    panelRefreshBtn.addEventListener("click", loadPanelStats);
+    panelRefreshBtn.addEventListener("click", () => {
+      loadPanelStats();
+      loadAdminSettings();
+    });
   }
 
   const panelLogoutBtn = $("#panelLogoutBtn");
@@ -869,11 +1173,47 @@ document.addEventListener("DOMContentLoaded", () => {
     panelLogoutBtn.addEventListener("click", logoutPanel);
   }
 
+  // ===== Downloader Manager & Maintenance Mode (Panel Admin) =====
+  const platformSaveBtn = $("#platformSaveBtn");
+  if (platformSaveBtn){
+    platformSaveBtn.addEventListener("click", saveDownloaderManager);
+  }
+
+  const maintenanceSaveBtn = $("#maintenanceSaveBtn");
+  if (maintenanceSaveBtn){
+    maintenanceSaveBtn.addEventListener("click", saveMaintenanceMode);
+  }
+
+  // ===== Overlay Maintenance Mode (tampilan pengunjung) =====
+  const maintenanceRetryBtn = $("#maintenanceRetryBtn");
+  if (maintenanceRetryBtn){
+    maintenanceRetryBtn.addEventListener("click", async () => {
+      const originalLabel = maintenanceRetryBtn.innerHTML;
+      maintenanceRetryBtn.disabled = true;
+      maintenanceRetryBtn.innerHTML = "<span>⏳</span> Memeriksa...";
+      await loadPublicSettings();
+      maintenanceRetryBtn.disabled = false;
+      maintenanceRetryBtn.innerHTML = originalLabel;
+    });
+  }
+
+  const maintenanceAdminLink = $("#maintenanceAdminLink");
+  if (maintenanceAdminLink){
+    maintenanceAdminLink.addEventListener("click", () => {
+      hideMaintenanceOverlay();
+      openPanel();
+    });
+  }
+
   // Track pengunjung sekali tiap kali web dibuka/di-reload.
   trackEvent({ event: "visit" });
 
   // Render daftar "Tools Populer" di beranda berdasarkan data pemakaian asli.
   renderPopularTools();
+
+  // Cek status maintenance & Downloader Manager sekali di awal, supaya
+  // pengunjung baru langsung lihat kondisi terbaru dari Panel Admin.
+  loadPublicSettings();
 
     const bigNotice = $("#bigNotice");
   if (bigNotice) {
