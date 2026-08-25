@@ -1,5 +1,8 @@
 export const config = { runtime: "edge" };
 
+import { getMaintenanceSettings, isPlatformEnabled } from "./_lib/settings.mjs";
+import { trackApiRequest, trackApiSuccess, trackApiFailure, trackDownloadCompleted } from "./_lib/stats.mjs";
+
 export default async function handler(request) {
   if (request.method !== "POST") {
     return Response.json({ error: "Method not allowed" }, { status: 405 });
@@ -17,7 +20,24 @@ export default async function handler(request) {
     return Response.json({ error: "URL Pinterest tidak valid." }, { status: 400 });
   }
 
+  const maintenance = await getMaintenanceSettings();
+  if (maintenance.enabled) {
+    return Response.json(
+      { error: maintenance.message, maintenance: true },
+      { status: 503, headers: { "Cache-Control": "no-store" } }
+    );
+  }
+
+  if (!(await isPlatformEnabled("pinterest"))) {
+    return Response.json(
+      { error: "Downloader Pinterest sedang dinonaktifkan oleh admin.", disabled: true },
+      { status: 403, headers: { "Cache-Control": "no-store" } }
+    );
+  }
+
   const apiBase = process.env.PINTEREST_API_URL || "https://api.nexray.eu.cc/downloader/pinterest";
+
+  await trackApiRequest();
 
   try {
     const apiUrl = `${apiBase}?url=${encodeURIComponent(url)}`;
@@ -28,9 +48,12 @@ export default async function handler(request) {
     const data = await upstream.json().catch(() => null);
 
     if (!upstream.ok) {
-      return Response.json({ error: data?.message || data?.error || `Nexray API error (${upstream.status})` }, { status: 502 });
+      const message = data?.message || data?.error || `Nexray API error (${upstream.status})`;
+      await trackApiFailure("pinterest", message);
+      return Response.json({ error: message }, { status: 502 });
     }
     if (!data?.status || !data?.result) {
+      await trackApiSuccess("pinterest");
       return Response.json({ error: data?.message || "API tidak menemukan media dari link tersebut." }, { status: 422 });
     }
 
@@ -62,14 +85,18 @@ export default async function handler(request) {
     }));
 
     if (!picker.length) {
+      await trackApiSuccess("pinterest");
       return Response.json({ error: "API berhasil dipanggil tetapi tidak ada media download." }, { status: 422 });
     }
+
+    await trackApiSuccess("pinterest");
 
     if (shouldDownload) {
       const chosen = picker[mediaIndex];
       if (!chosen || !chosen.url) {
         return Response.json({ error: "Format yang dipilih tidak ditemukan." }, { status: 422 });
       }
+      await trackDownloadCompleted();
       return Response.json({
         url: chosen.url,
         extension: chosen.extension,
@@ -87,6 +114,7 @@ export default async function handler(request) {
       picker
     }, { status: 200, headers: { "Cache-Control": "no-store" } });
   } catch (error) {
+    await trackApiFailure("pinterest", error.message);
     return Response.json({ error: `Tidak dapat terhubung ke Nexray API: ${error.message}` }, { status: 502 });
   }
 }
