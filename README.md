@@ -53,24 +53,30 @@ Catatan: gunakan hanya konten yang memang boleh kamu unduh dan ikuti Terms of Se
 Buka menu **Panel** di navigasi bawah, masukkan `ADMIN_PANEL_KEY` (env
 variable di Vercel, default `reygantenganakmamah` kalau belum diisi).
 
-Fitur yang tersedia:
+Fitur yang tersedia (urut dari atas ke bawah di Panel Admin):
 
-- **Dashboard** — Total Pengunjung, Tools Dipakai, Total Download, Download
-  Hari Ini, jumlah API Request, Request Gagal, dan Status API (online/offline
-  berdasarkan hasil panggilan terakhir ke API downloader).
-- **Downloader Manager** — nyalakan/matikan TikTok, Instagram, YouTube,
-  Pinterest satu-satu, dan ubah nama tampilannya. Platform yang dimatikan
-  otomatis ditolak juga di server (`api/download.mjs` /
-  `api/download-pinterest.mjs`), bukan cuma disembunyikan di tampilan.
+- **Website Setting** — ubah nama situs, deskripsi/tagline, URL logo, dan
+  link Customer Service. Begitu disimpan, langsung diterapkan ke seluruh
+  bagian website (judul tab browser, meta description, favicon, logo di
+  topbar/status card/splash screen, dan tombol "Buka Customer Service").
+- **Tools Paling Populer** — ranking pemakaian tools berdasarkan data
+  pengunjung asli (bukan angka statis).
 - **Maintenance Mode** — matikan sementara seluruh fitur download dengan
   pesan kustom. Pengunjung akan melihat layar overlay dengan tombol
   "Coba Lagi". Panel Admin sendiri tetap bisa diakses lewat tombol
   "Saya admin, buka Panel Login" di overlay tersebut, supaya admin tetap
   bisa login dan mematikan mode maintenance.
+- **Downloader Manager** — nyalakan/matikan TikTok, Instagram, YouTube,
+  Pinterest satu-satu, dan ubah nama tampilannya. Platform yang dimatikan
+  otomatis ditolak juga di server (`api/download.mjs` /
+  `api/download-pinterest.mjs`), bukan cuma disembunyikan di tampilan.
+- **Dashboard** — Total Pengunjung, Tools Dipakai, Total Download, Download
+  Hari Ini, jumlah API Request, Request Gagal, dan Status API (online/offline
+  berdasarkan hasil panggilan terakhir ke API downloader).
 
 Semua pengaturan ini disimpan di Vercel KV (lihat `.env.example`). Kalau KV
-belum disetup, Downloader Manager & Maintenance Mode tetap tampil tapi
-perubahan tidak akan tersimpan permanen.
+belum disetup, semua kartu di atas tetap tampil tapi perubahan tidak akan
+tersimpan permanen.
 
 ## Deploy ke Netlify
 
