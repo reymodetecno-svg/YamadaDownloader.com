@@ -11,36 +11,85 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer">
 <title>YamadaDownloader</title>
 <style>
+  /* ============================================================
+     PANEL ADMIN — desain kartu berwarna (Dashboard, Website
+     Setting, Tools Populer, Maintenance Mode, Downloader Manager).
+     Semua pakai var(--surface)/var(--line)/var(--text) dari
+     style.css supaya otomatis ngikut mode terang/gelap.
+     ============================================================ */
   .panel-error{ color:#ff6b6b; margin-top:10px; }
-  .panel-notice{ color:#f5b942; margin-top:10px; }
+  .panel-notice{ color:#c9820b; margin-top:2px; font-size:12px; }
+  body.dark-mode .panel-notice{ color:#f5b942; }
   .panel-dashboard{ display:flex; flex-direction:column; gap:16px; }
   .panel-dashboard[hidden]{ display:none; }
-  .panel-stats-grid{
-    display:grid; grid-template-columns:1fr 1fr; gap:12px;
-  }
-  .panel-stat-card{
-    background:rgba(255,255,255,0.04);
-    border:1px solid rgba(255,255,255,0.08);
-    border-radius:16px;
-    padding:16px;
-    display:flex; flex-direction:column; gap:6px;
-  }
-  .panel-stat-label{ font-size:12px; opacity:0.65; letter-spacing:0.03em; }
-  .panel-stat-value{ font-size:28px; font-weight:800; }
-  .panel-section-title{ font-size:14px; font-weight:700; opacity:0.8; margin-top:4px; }
-  .popular-tools-list{ display:flex; flex-direction:column; gap:8px; }
-  .popular-tool-row{
-    display:flex; align-items:center; justify-content:space-between;
-    background:rgba(255,255,255,0.04);
-    border:1px solid rgba(255,255,255,0.08);
-    border-radius:12px;
-    padding:12px 14px;
-  }
-  .popular-tool-row b{ text-transform:capitalize; }
-  .popular-tool-rank{ opacity:0.5; font-size:12px; margin-right:8px; }
-  .panel-logout{ width:100%; text-align:center; }
 
-  /* ===== Dashboard tambahan (Total Download, Hari Ini, API Request, dst) ===== */
+  /* ===== Banner ===== */
+  .panel-hero{
+    position:relative; overflow:hidden; border-radius:26px; padding:26px 22px;
+    display:flex; align-items:center; gap:16px; color:#fff;
+    background:linear-gradient(135deg,#22398f 0%,#3f7ff0 55%,#4fc3f7 100%);
+    box-shadow:0 20px 45px rgba(34,57,143,.35);
+  }
+  .panel-hero::before, .panel-hero::after{
+    content:""; position:absolute; border-radius:50%; filter:blur(2px);
+    background:rgba(255,255,255,0.16); pointer-events:none;
+  }
+  .panel-hero::before{ width:180px; height:180px; top:-70px; right:-50px; }
+  .panel-hero::after{ width:120px; height:120px; bottom:-60px; left:-30px; background:rgba(255,255,255,0.12); }
+  .panel-hero-logo{
+    position:relative; z-index:1; flex:none; width:56px; height:56px; border-radius:16px;
+    object-fit:cover; box-shadow:0 8px 20px rgba(0,0,0,.25); background:#fff;
+  }
+  .panel-hero-text{ position:relative; z-index:1; min-width:0; }
+  .panel-hero-eyebrow{ font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; opacity:.85; font-weight:800; }
+  .panel-hero-text h2{ margin:3px 0 4px; font-size:19px; line-height:1.2; word-break:break-word; }
+  .panel-hero-text p{ margin:0; font-size:12px; opacity:.9; }
+
+  /* ===== Kartu section ===== */
+  .panel-card{
+    background:var(--surface); border:1px solid var(--line); border-radius:22px;
+    padding:18px; box-shadow:var(--shadow); display:flex; flex-direction:column; gap:14px;
+  }
+  .panel-card-head{ display:flex; align-items:flex-start; gap:12px; }
+  .panel-card-icon{
+    flex:none; width:42px; height:42px; border-radius:14px; display:grid; place-items:center;
+    font-size:19px; color:#fff;
+  }
+  .panel-card-head h3{ margin:0 0 2px; font-size:15px; }
+  .panel-card-head p{ margin:0; font-size:11.5px; color:var(--muted); }
+  .panel-card-body{ display:flex; flex-direction:column; gap:10px; }
+
+  .panel-card[data-accent="violet"] .panel-card-icon{ background:linear-gradient(135deg,#a78bfa,#7c3aed); }
+  .panel-card[data-accent="blue"] .panel-card-icon{ background:linear-gradient(135deg,#5ec8fb,#2563eb); }
+  .panel-card[data-accent="orange"] .panel-card-icon{ background:linear-gradient(135deg,#fdba74,#ea580c); }
+  .panel-card[data-accent="green"] .panel-card-icon{ background:linear-gradient(135deg,#6ee7a5,#16a34a); }
+  .panel-card[data-accent="deep"] .panel-card-icon{ background:linear-gradient(135deg,#38bdf8,#0369a1); }
+
+  .panel-field-label{ font-size:11px; font-weight:800; opacity:0.7; letter-spacing:.4px; }
+  .panel-input{
+    width:100%; border:1px solid var(--line); background:var(--surface2); color:var(--text);
+    border-radius:12px; padding:10px 12px; font-size:13px; font-family:inherit;
+  }
+  .panel-input:focus{ outline:2px solid var(--primary); outline-offset:1px; }
+  .panel-textarea{ resize:vertical; }
+  .panel-logo-field{ display:flex; align-items:center; gap:10px; }
+  .panel-logo-preview{
+    width:40px; height:40px; border-radius:10px; object-fit:cover;
+    border:1px solid var(--line); flex:none; background:var(--surface2);
+  }
+  .secondary-btn{
+    width:100%; text-align:center; border:1px solid var(--line); background:var(--surface2);
+    color:var(--text); border-radius:14px; padding:12px; font-weight:800; font-size:13px;
+  }
+
+  /* ===== Dashboard: grid statistik ===== */
+  .panel-stats-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .panel-stat-card{
+    background:var(--surface2); border:1px solid var(--line); border-radius:16px;
+    padding:14px; display:flex; flex-direction:column; gap:6px;
+  }
+  .panel-stat-label{ font-size:11.5px; opacity:0.65; letter-spacing:0.03em; }
+  .panel-stat-value{ font-size:24px; font-weight:800; }
   .panel-stat-card-wide{ grid-column:1 / -1; }
   .panel-stat-sub{ opacity:0.55; font-size:11px; }
   .panel-status-badge{
@@ -49,24 +98,31 @@
   }
   .panel-status-online{ background:rgba(34,160,107,0.16); color:#22a06b; }
   .panel-status-offline{ background:rgba(231,76,60,0.16); color:#e74c3c; }
-  .panel-status-unknown{ background:rgba(255,255,255,0.08); color:#9fb3c2; }
+  .panel-status-unknown{ background:rgba(148,163,184,0.18); color:#64748b; }
+
+  .popular-tools-list{ display:flex; flex-direction:column; gap:8px; }
+  .popular-tool-row{
+    display:flex; align-items:center; justify-content:space-between;
+    background:var(--surface2); border:1px solid var(--line);
+    border-radius:12px; padding:12px 14px;
+  }
+  .popular-tool-row b{ text-transform:capitalize; }
+  .popular-tool-rank{ opacity:0.5; font-size:12px; margin-right:8px; }
+  .panel-logout{ width:100%; text-align:center; }
 
   /* ===== Downloader Manager ===== */
-  .panel-helper-left{ text-align:left; margin:0; }
-  .panel-field-label{ font-size:11px; font-weight:800; opacity:0.7; letter-spacing:.4px; }
   .platform-manager-list{ display:flex; flex-direction:column; gap:10px; }
   .platform-manager-row{
     display:flex; align-items:center; justify-content:space-between; gap:12px;
-    background:rgba(255,255,255,0.04);
-    border:1px solid rgba(255,255,255,0.08);
+    background:var(--surface2); border:1px solid var(--line);
     border-radius:14px; padding:10px 12px;
   }
   .platform-manager-info{ display:flex; align-items:center; gap:10px; min-width:0; flex:1; }
   .platform-manager-icon{ width:34px; height:34px; border-radius:10px; object-fit:cover; flex:none; }
   .platform-manager-id{ opacity:0.5; font-size:10px; text-transform:uppercase; letter-spacing:.5px; }
   .platform-name-input{
-    display:block; width:100%; border:1px solid rgba(255,255,255,0.12);
-    background:rgba(255,255,255,0.03); color:inherit; border-radius:8px;
+    display:block; width:100%; border:1px solid var(--line);
+    background:var(--surface); color:var(--text); border-radius:8px;
     padding:6px 8px; font-size:13px; font-weight:700; margin-bottom:2px;
   }
   .platform-manager-row.platform-disabled{ opacity:0.55; }
@@ -75,12 +131,12 @@
   .toggle-switch{ position:relative; display:inline-block; width:44px; height:26px; flex:none; }
   .toggle-switch input{ opacity:0; width:0; height:0; }
   .toggle-slider{
-    position:absolute; cursor:pointer; inset:0; background:rgba(255,255,255,0.18);
+    position:absolute; cursor:pointer; inset:0; background:rgba(148,163,184,0.4);
     border-radius:99px; transition:.2s;
   }
   .toggle-slider::before{
     content:""; position:absolute; height:20px; width:20px; left:3px; top:3px;
-    background:#fff; border-radius:50%; transition:.2s;
+    background:#fff; border-radius:50%; transition:.2s; box-shadow:0 2px 4px rgba(0,0,0,.25);
   }
   .toggle-switch input:checked + .toggle-slider{ background:#3ecf8e; }
   .toggle-switch input:checked + .toggle-slider::before{ transform:translateX(18px); }
@@ -88,14 +144,13 @@
   /* ===== Maintenance Mode (admin panel) ===== */
   .maintenance-manager-row{
     display:flex; align-items:center; justify-content:space-between;
-    background:rgba(255,255,255,0.04);
-    border:1px solid rgba(255,255,255,0.08);
+    background:var(--surface2); border:1px solid var(--line);
     border-radius:14px; padding:12px 14px;
   }
   .maintenance-manager-label{ font-size:13px; font-weight:800; }
   .maintenance-message-input{
-    width:100%; resize:vertical; border:1px solid rgba(255,255,255,0.12);
-    background:rgba(255,255,255,0.03); color:inherit; border-radius:12px;
+    width:100%; resize:vertical; border:1px solid var(--line);
+    background:var(--surface2); color:var(--text); border-radius:12px;
     padding:10px 12px; font-size:13px; font-family:inherit;
   }
 
@@ -117,6 +172,10 @@
   .maintenance-box .back-btn{ width:100%; margin-top:6px; }
   body.dark-mode .maintenance-box{ background:#16232f; color:#eaf3fb; }
   body.dark-mode .maintenance-box p{ color:#9fb3c2; }
+
+  @media(max-width:420px){
+    .panel-hero{ flex-direction:column; align-items:flex-start; text-align:left; }
+  }
 </style>
 </head>
 <body>
@@ -202,7 +261,7 @@
   <div class="loading-content">
 
     <div class="loading-logo">
-      <img src="LOGO.jpg" alt="YamadaDownloader">
+      <img src="LOGO.jpg" alt="YamadaDownloader" class="site-logo-img">
     </div>
 
     <div class="loading-text-wrap">
@@ -219,8 +278,8 @@
 </div>
 
   <div id="splash" class="splash">
-    <div class="splash-logo"><img src="LOGO.jpg" alt=""></div>
-    <p>YamadaDownloader</p>
+    <div class="splash-logo"><img src="LOGO.jpg" alt="" class="site-logo-img"></div>
+    <p id="splashName">YamadaDownloader</p>
     <div class="loader"><span></span></div>
   </div>
 
@@ -237,8 +296,8 @@
   <div class="app-shell">
     <header class="topbar">
   <a class="brand" href="#home" data-page="home">
-    <img src="LOGO.jpg" alt="" class="brand-logo">
-    <span>Yamada<span>Downloader</span></span>
+    <img src="LOGO.jpg" alt="" class="brand-logo site-logo-img">
+    <span id="brandNameText">Yamada<span>Downloader</span></span>
   </a>
 
   <div class="topbar-actions">
@@ -260,9 +319,9 @@
 
         <section class="status-card">
           <div class="status-head">
-           <img src="LOGO.jpg" alt="" class="avatar">
+           <img src="LOGO.jpg" alt="" class="avatar site-logo-img">
             <div class="status-head-text">
-              <strong>YamadaDownloader</strong>
+              <strong id="statusHeadName">YamadaDownloader</strong>
               <span>V5.0.0</span>
             </div>
             <span class="status-badge"><i></i> Online</span>
@@ -504,126 +563,209 @@
         </div>
 
         <div id="panelDashboard" class="panel-dashboard" hidden>
-          <div class="panel-stats-grid">
-            <div class="panel-stat-card">
-              <span class="panel-stat-label">Total Pengunjung</span>
-              <span id="statTotalVisits" class="panel-stat-value">0</span>
-            </div>
-            <div class="panel-stat-card">
-              <span class="panel-stat-label">Tools Dipakai</span>
-              <span id="statToolsUsed" class="panel-stat-value">0</span>
-            </div>
-            <div class="panel-stat-card">
-              <span class="panel-stat-label">Total Download</span>
-              <span id="statTotalDownloads" class="panel-stat-value">0</span>
-            </div>
-            <div class="panel-stat-card">
-              <span class="panel-stat-label">Download Hari Ini</span>
-              <span id="statDownloadsToday" class="panel-stat-value">0</span>
-            </div>
-            <div class="panel-stat-card">
-              <span class="panel-stat-label">API Request</span>
-              <span id="statApiRequests" class="panel-stat-value">0</span>
-            </div>
-            <div class="panel-stat-card">
-              <span class="panel-stat-label">Request Gagal</span>
-              <span id="statApiFailed" class="panel-stat-value">0</span>
-            </div>
-            <div class="panel-stat-card panel-stat-card-wide">
-              <span class="panel-stat-label">Status API</span>
-              <span id="statApiStatus" class="panel-status-badge panel-status-unknown">● Belum ada data</span>
-              <small id="statApiStatusTime" class="panel-stat-sub"></small>
+
+          <!-- Banner -->
+          <div class="panel-hero">
+            <img id="panelHeroLogo" src="LOGO.jpg" alt="" class="panel-hero-logo site-logo-img">
+            <div class="panel-hero-text">
+              <span class="panel-hero-eyebrow">Admin Panel</span>
+              <h2 id="panelHeroName">YamadaDownloader</h2>
+              <p>Kelola semua pengaturan website dari sini.</p>
             </div>
           </div>
 
-          <div class="panel-section-title">Tools Paling Populer</div>
-          <div id="popularToolsList" class="popular-tools-list">
-            <p class="helper">Memuat data...</p>
-          </div>
-
-          <p id="panelKvNotice" class="helper panel-notice" hidden></p>
-
-          <button id="panelRefreshBtn" class="primary-btn" type="button">↻ Refresh Data</button>
-
-          <div class="panel-section-title">Downloader Manager</div>
-          <p class="helper panel-helper-left">Nyalakan/matikan downloader per platform dan atur nama tampilannya.</p>
-
-          <div class="platform-manager-list">
-            <div class="platform-manager-row" data-platform-row="tiktok">
-              <div class="platform-manager-info">
-                <img src="Tiktok.jpg" alt="" class="platform-manager-icon">
-                <div>
-                  <input type="text" class="platform-name-input" data-platform="tiktok" maxlength="40" placeholder="Nama platform">
-                  <div class="platform-manager-id">tiktok</div>
-                </div>
+          <!-- Website Setting -->
+          <div class="panel-card" data-accent="violet">
+            <div class="panel-card-head">
+              <span class="panel-card-icon">🌐</span>
+              <div>
+                <h3>Website Setting</h3>
+                <p>Ubah nama situs, deskripsi, logo, dan link Customer Service.</p>
               </div>
-              <label class="toggle-switch">
-                <input type="checkbox" class="platform-toggle" data-platform="tiktok" checked>
-                <span class="toggle-slider"></span>
-              </label>
             </div>
+            <div class="panel-card-body">
+              <label class="panel-field-label" for="siteNameInput">Nama Situs</label>
+              <input id="siteNameInput" type="text" class="panel-input" maxlength="60" placeholder="YamadaDownloader">
 
-            <div class="platform-manager-row" data-platform-row="instagram">
-              <div class="platform-manager-info">
-                <img src="Instagram.jpg" alt="" class="platform-manager-icon">
-                <div>
-                  <input type="text" class="platform-name-input" data-platform="instagram" maxlength="40" placeholder="Nama platform">
-                  <div class="platform-manager-id">instagram</div>
-                </div>
-              </div>
-              <label class="toggle-switch">
-                <input type="checkbox" class="platform-toggle" data-platform="instagram" checked>
-                <span class="toggle-slider"></span>
-              </label>
-            </div>
+              <label class="panel-field-label" for="siteDescriptionInput">Deskripsi / Tagline</label>
+              <textarea id="siteDescriptionInput" class="panel-input panel-textarea" rows="2" maxlength="160"
+                        placeholder="Download video dari TikTok, Instagram, dan YouTube."></textarea>
 
-            <div class="platform-manager-row" data-platform-row="youtube">
-              <div class="platform-manager-info">
-                <img src="Youtube.jpg" alt="" class="platform-manager-icon">
-                <div>
-                  <input type="text" class="platform-name-input" data-platform="youtube" maxlength="40" placeholder="Nama platform">
-                  <div class="platform-manager-id">youtube</div>
-                </div>
+              <label class="panel-field-label" for="siteLogoInput">URL Logo</label>
+              <div class="panel-logo-field">
+                <img id="siteLogoPreview" class="panel-logo-preview" src="LOGO.jpg" alt="">
+                <input id="siteLogoInput" type="text" class="panel-input" maxlength="300" placeholder="LOGO.jpg atau https://...">
               </div>
-              <label class="toggle-switch">
-                <input type="checkbox" class="platform-toggle" data-platform="youtube" checked>
-                <span class="toggle-slider"></span>
-              </label>
-            </div>
 
-            <div class="platform-manager-row" data-platform-row="pinterest">
-              <div class="platform-manager-info">
-                <img src="Pinterest.jpg" alt="" class="platform-manager-icon">
-                <div>
-                  <input type="text" class="platform-name-input" data-platform="pinterest" maxlength="40" placeholder="Nama platform">
-                  <div class="platform-manager-id">pinterest</div>
-                </div>
-              </div>
-              <label class="toggle-switch">
-                <input type="checkbox" class="platform-toggle" data-platform="pinterest" checked>
-                <span class="toggle-slider"></span>
-              </label>
+              <label class="panel-field-label" for="siteCsLinkInput">Link Customer Service</label>
+              <input id="siteCsLinkInput" type="text" class="panel-input" maxlength="300" placeholder="https://wa.me/62xxxxxxxxxx">
+
+              <button id="siteSaveBtn" class="primary-btn" type="button">💾 Simpan Website Setting</button>
+              <p id="siteSaveStatus" class="helper panel-notice" hidden></p>
             </div>
           </div>
 
-          <button id="platformSaveBtn" class="primary-btn" type="button">💾 Simpan Downloader Manager</button>
-          <p id="platformSaveStatus" class="helper panel-notice" hidden></p>
-
-          <div class="panel-section-title">Maintenance Mode</div>
-
-          <div class="maintenance-manager-row">
-            <span class="maintenance-manager-label">Mode Maintenance</span>
-            <label class="toggle-switch">
-              <input type="checkbox" id="maintenanceToggle">
-              <span class="toggle-slider"></span>
-            </label>
+          <!-- Tools Paling Populer -->
+          <div class="panel-card" data-accent="blue">
+            <div class="panel-card-head">
+              <span class="panel-card-icon">🔥</span>
+              <div>
+                <h3>Tools Paling Populer</h3>
+                <p>Ranking pemakaian tools berdasarkan data pengunjung asli.</p>
+              </div>
+            </div>
+            <div class="panel-card-body">
+              <div id="popularToolsList" class="popular-tools-list">
+                <p class="helper">Memuat data...</p>
+              </div>
+              <p id="panelKvNotice" class="helper panel-notice" hidden></p>
+              <button id="panelRefreshBtn" class="secondary-btn" type="button">↻ Refresh Data</button>
+            </div>
           </div>
 
-          <label for="maintenanceMessageInput" class="panel-field-label">Pesan Maintenance</label>
-          <textarea id="maintenanceMessageInput" class="maintenance-message-input" rows="3" maxlength="500" placeholder="Website sedang dalam perbaikan..."></textarea>
+          <!-- Maintenance Mode -->
+          <div class="panel-card" data-accent="orange">
+            <div class="panel-card-head">
+              <span class="panel-card-icon">🛠️</span>
+              <div>
+                <h3>Maintenance Mode</h3>
+                <p>Matikan sementara seluruh fitur download dengan pesan kustom.</p>
+              </div>
+            </div>
+            <div class="panel-card-body">
+              <div class="maintenance-manager-row">
+                <span class="maintenance-manager-label">Mode Maintenance</span>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="maintenanceToggle">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
 
-          <button id="maintenanceSaveBtn" class="primary-btn" type="button">💾 Simpan Maintenance Mode</button>
-          <p id="maintenanceSaveStatus" class="helper panel-notice" hidden></p>
+              <label for="maintenanceMessageInput" class="panel-field-label">Pesan Maintenance</label>
+              <textarea id="maintenanceMessageInput" class="maintenance-message-input" rows="3" maxlength="500"
+                        placeholder="Website sedang dalam perbaikan..."></textarea>
+
+              <button id="maintenanceSaveBtn" class="primary-btn" type="button">💾 Simpan Maintenance Mode</button>
+              <p id="maintenanceSaveStatus" class="helper panel-notice" hidden></p>
+            </div>
+          </div>
+
+          <!-- Downloader Manager -->
+          <div class="panel-card" data-accent="green">
+            <div class="panel-card-head">
+              <span class="panel-card-icon">⬇️</span>
+              <div>
+                <h3>Downloader Manager</h3>
+                <p>Nyalakan/matikan downloader per platform & atur nama tampilannya.</p>
+              </div>
+            </div>
+            <div class="panel-card-body">
+              <div class="platform-manager-list">
+                <div class="platform-manager-row" data-platform-row="tiktok">
+                  <div class="platform-manager-info">
+                    <img src="Tiktok.jpg" alt="" class="platform-manager-icon">
+                    <div>
+                      <input type="text" class="platform-name-input" data-platform="tiktok" maxlength="40" placeholder="Nama platform">
+                      <div class="platform-manager-id">tiktok</div>
+                    </div>
+                  </div>
+                  <label class="toggle-switch">
+                    <input type="checkbox" class="platform-toggle" data-platform="tiktok" checked>
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+
+                <div class="platform-manager-row" data-platform-row="instagram">
+                  <div class="platform-manager-info">
+                    <img src="Instagram.jpg" alt="" class="platform-manager-icon">
+                    <div>
+                      <input type="text" class="platform-name-input" data-platform="instagram" maxlength="40" placeholder="Nama platform">
+                      <div class="platform-manager-id">instagram</div>
+                    </div>
+                  </div>
+                  <label class="toggle-switch">
+                    <input type="checkbox" class="platform-toggle" data-platform="instagram" checked>
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+
+                <div class="platform-manager-row" data-platform-row="youtube">
+                  <div class="platform-manager-info">
+                    <img src="Youtube.jpg" alt="" class="platform-manager-icon">
+                    <div>
+                      <input type="text" class="platform-name-input" data-platform="youtube" maxlength="40" placeholder="Nama platform">
+                      <div class="platform-manager-id">youtube</div>
+                    </div>
+                  </div>
+                  <label class="toggle-switch">
+                    <input type="checkbox" class="platform-toggle" data-platform="youtube" checked>
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+
+                <div class="platform-manager-row" data-platform-row="pinterest">
+                  <div class="platform-manager-info">
+                    <img src="Pinterest.jpg" alt="" class="platform-manager-icon">
+                    <div>
+                      <input type="text" class="platform-name-input" data-platform="pinterest" maxlength="40" placeholder="Nama platform">
+                      <div class="platform-manager-id">pinterest</div>
+                    </div>
+                  </div>
+                  <label class="toggle-switch">
+                    <input type="checkbox" class="platform-toggle" data-platform="pinterest" checked>
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+              </div>
+
+              <button id="platformSaveBtn" class="primary-btn" type="button">💾 Simpan Downloader Manager</button>
+              <p id="platformSaveStatus" class="helper panel-notice" hidden></p>
+            </div>
+          </div>
+
+          <!-- Dashboard -->
+          <div class="panel-card" data-accent="deep">
+            <div class="panel-card-head">
+              <span class="panel-card-icon">📊</span>
+              <div>
+                <h3>Dashboard</h3>
+                <p>Ringkasan statistik website secara real-time.</p>
+              </div>
+            </div>
+            <div class="panel-card-body">
+              <div class="panel-stats-grid">
+                <div class="panel-stat-card">
+                  <span class="panel-stat-label">Total Pengunjung</span>
+                  <span id="statTotalVisits" class="panel-stat-value">0</span>
+                </div>
+                <div class="panel-stat-card">
+                  <span class="panel-stat-label">Tools Dipakai</span>
+                  <span id="statToolsUsed" class="panel-stat-value">0</span>
+                </div>
+                <div class="panel-stat-card">
+                  <span class="panel-stat-label">Total Download</span>
+                  <span id="statTotalDownloads" class="panel-stat-value">0</span>
+                </div>
+                <div class="panel-stat-card">
+                  <span class="panel-stat-label">Download Hari Ini</span>
+                  <span id="statDownloadsToday" class="panel-stat-value">0</span>
+                </div>
+                <div class="panel-stat-card">
+                  <span class="panel-stat-label">API Request</span>
+                  <span id="statApiRequests" class="panel-stat-value">0</span>
+                </div>
+                <div class="panel-stat-card">
+                  <span class="panel-stat-label">Request Gagal</span>
+                  <span id="statApiFailed" class="panel-stat-value">0</span>
+                </div>
+                <div class="panel-stat-card panel-stat-card-wide">
+                  <span class="panel-stat-label">Status API</span>
+                  <span id="statApiStatus" class="panel-status-badge panel-status-unknown">● Belum ada data</span>
+                  <small id="statApiStatusTime" class="panel-stat-sub"></small>
+                </div>
+              </div>
+            </div>
+          </div>
 
           <button id="panelLogoutBtn" class="back-btn panel-logout" type="button">Keluar dari Panel</button>
         </div>
