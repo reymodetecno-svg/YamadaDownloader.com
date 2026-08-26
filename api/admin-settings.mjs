@@ -7,13 +7,24 @@ import {
   getPlatformSettings,
   savePlatformSettings,
   getMaintenanceSettings,
-  saveMaintenanceSettings
+  saveMaintenanceSettings,
+  getSiteSettings,
+  saveSiteSettings
 } from "./_lib/settings.mjs";
 
 async function isAuthorized(request) {
   const authHeader = request.headers.get("authorization") || "";
   const token = authHeader.replace(/^Bearer\s+/i, "").trim();
   return verifyAdminToken(token);
+}
+
+async function loadAllSettings() {
+  const [platforms, maintenance, site] = await Promise.all([
+    getPlatformSettings(),
+    getMaintenanceSettings(),
+    getSiteSettings()
+  ]);
+  return { platforms, maintenance, site };
 }
 
 export default async function handler(request) {
@@ -26,19 +37,15 @@ export default async function handler(request) {
   }
 
   if (request.method === "GET") {
-    const [platforms, maintenance] = await Promise.all([
-      getPlatformSettings(),
-      getMaintenanceSettings()
-    ]);
-
+    const settings = await loadAllSettings();
     return Response.json(
-      { kvConfigured: isKvConfigured(), platforms, maintenance },
+      { kvConfigured: isKvConfigured(), ...settings },
       { status: 200, headers: { "Cache-Control": "no-store" } }
     );
   }
 
-  // POST -> update pengaturan (bisa kirim platforms saja, maintenance saja,
-  // atau dua-duanya sekaligus).
+  // POST -> update pengaturan (bisa kirim platforms/maintenance/site secara
+  // terpisah atau sekaligus, tergantung kartu mana yang di-Save di UI).
   let body;
   try {
     body = await request.json();
@@ -70,13 +77,13 @@ export default async function handler(request) {
     await saveMaintenanceSettings(body.maintenance);
   }
 
-  const [platforms, maintenance] = await Promise.all([
-    getPlatformSettings(),
-    getMaintenanceSettings()
-  ]);
+  if (body?.site && typeof body.site === "object") {
+    await saveSiteSettings(body.site);
+  }
 
+  const settings = await loadAllSettings();
   return Response.json(
-    { ok: true, platforms, maintenance },
+    { ok: true, ...settings },
     { status: 200, headers: { "Cache-Control": "no-store" } }
   );
 }
