@@ -44,6 +44,18 @@ const DEFAULT_PLATFORM_SETTINGS = {
 let platformSettings = { ...DEFAULT_PLATFORM_SETTINGS };
 let maintenanceSettings = { enabled: false, message: "" };
 
+// Identitas website (Website Setting): nama, deskripsi, logo, link CS.
+// Nilai default di sini harus sama persis dengan DEFAULT_SITE di
+// api/_lib/settings.mjs, dan dipakai selagi /api/settings belum selesai
+// dimuat atau kalau KV belum disetup di server.
+const DEFAULT_SITE_SETTINGS = {
+  name: "YamadaDownloader",
+  description: "YamadaDownloader - download video dari TikTok, Instagram, dan YouTube.",
+  logoUrl: "LOGO.jpg",
+  csLink: "https://wa.me/6283869485575"
+};
+let siteSettings = { ...DEFAULT_SITE_SETTINGS };
+
 const tools = {
   youtube: {
     title: "YouTube Downloader",
@@ -469,6 +481,22 @@ async function loadAdminSettings(){
       if (toggle) toggle.checked = Boolean(data.maintenance.enabled);
       if (messageInput) messageInput.value = data.maintenance.message || "";
     }
+
+    if (data.site){
+      applySiteSettingsToUI(data.site);
+
+      const nameInput = $("#siteNameInput");
+      const descInput = $("#siteDescriptionInput");
+      const logoInput = $("#siteLogoInput");
+      const logoPreview = $("#siteLogoPreview");
+      const csInput = $("#siteCsLinkInput");
+
+      if (nameInput) nameInput.value = data.site.name || "";
+      if (descInput) descInput.value = data.site.description || "";
+      if (logoInput) logoInput.value = data.site.logoUrl || "";
+      if (logoPreview) logoPreview.src = data.site.logoUrl || DEFAULT_SITE_SETTINGS.logoUrl;
+      if (csInput) csInput.value = data.site.csLink || "";
+    }
   }catch{
     // Kalau gagal, form biarin nampilin data terakhir yang berhasil dimuat.
   }
@@ -515,6 +543,11 @@ async function saveAdminSettings(payload, statusElId){
       maintenanceSettings = data.maintenance;
       applyMaintenanceState(data.maintenance);
     }
+    if (data.site){
+      applySiteSettingsToUI(data.site);
+      const logoPreview = $("#siteLogoPreview");
+      if (logoPreview) logoPreview.src = data.site.logoUrl || DEFAULT_SITE_SETTINGS.logoUrl;
+    }
 
     if (statusEl){
       statusEl.textContent = "✔ Pengaturan berhasil disimpan.";
@@ -559,6 +592,56 @@ async function saveMaintenanceMode(){
       message: messageInput ? messageInput.value.trim() : ""
     }
   }, "#maintenanceSaveStatus");
+}
+
+/* ===================== WEBSITE SETTING (nama, deskripsi, logo, CS) ===================== */
+
+// Terapkan identitas website ke seluruh elemen terkait: title tab, meta
+// description, favicon, semua logo (.site-logo-img), nama brand di topbar &
+// status card & splash screen, serta link Customer Service.
+function applySiteSettingsToUI(site){
+  siteSettings = { ...DEFAULT_SITE_SETTINGS, ...(site || {}) };
+
+  document.title = siteSettings.name;
+
+  const metaDesc = document.querySelector('meta[name="description"]');
+  if (metaDesc) metaDesc.setAttribute("content", siteSettings.description);
+
+  const favicon = document.querySelector('link[rel="icon"]');
+  if (favicon) favicon.href = siteSettings.logoUrl;
+
+  document.querySelectorAll(".site-logo-img").forEach(img => {
+    img.src = siteSettings.logoUrl;
+  });
+
+  const brandNameText = $("#brandNameText");
+  if (brandNameText) brandNameText.textContent = siteSettings.name;
+
+  const statusHeadName = $("#statusHeadName");
+  if (statusHeadName) statusHeadName.textContent = siteSettings.name;
+
+  const splashName = $("#splashName");
+  if (splashName) splashName.textContent = siteSettings.name;
+
+  const panelHeroName = $("#panelHeroName");
+  if (panelHeroName) panelHeroName.textContent = siteSettings.name;
+
+  const csLink = $("#csLink");
+  if (csLink) csLink.href = siteSettings.csLink;
+  CONFIG.customerService = siteSettings.csLink;
+}
+
+function collectSiteFormPayload(){
+  return {
+    name: $("#siteNameInput")?.value.trim(),
+    description: $("#siteDescriptionInput")?.value.trim(),
+    logoUrl: $("#siteLogoInput")?.value.trim(),
+    csLink: $("#siteCsLinkInput")?.value.trim()
+  };
+}
+
+async function saveWebsiteSetting(){
+  await saveAdminSettings({ site: collectSiteFormPayload() }, "#siteSaveStatus");
 }
 
 /* ===================== MAINTENANCE MODE (PENGUNJUNG) ===================== */
@@ -608,6 +691,10 @@ async function loadPublicSettings(){
 
     if (data.maintenance){
       applyMaintenanceState(data.maintenance);
+    }
+
+    if (data.site){
+      applySiteSettingsToUI(data.site);
     }
   }catch{
     // no-op — biarkan web tetap bisa dipakai kalau /api/settings gagal diambil.
@@ -1182,6 +1269,22 @@ document.addEventListener("DOMContentLoaded", () => {
   const maintenanceSaveBtn = $("#maintenanceSaveBtn");
   if (maintenanceSaveBtn){
     maintenanceSaveBtn.addEventListener("click", saveMaintenanceMode);
+  }
+
+  // ===== Website Setting (Panel Admin) =====
+  const siteSaveBtn = $("#siteSaveBtn");
+  if (siteSaveBtn){
+    siteSaveBtn.addEventListener("click", saveWebsiteSetting);
+  }
+
+  // Preview logo langsung berubah begitu admin ngetik URL baru, sebelum
+  // disimpan — biar kelihatan hasilnya duluan.
+  const siteLogoInput = $("#siteLogoInput");
+  const siteLogoPreview = $("#siteLogoPreview");
+  if (siteLogoInput && siteLogoPreview){
+    siteLogoInput.addEventListener("input", () => {
+      siteLogoPreview.src = siteLogoInput.value.trim() || DEFAULT_SITE_SETTINGS.logoUrl;
+    });
   }
 
   // ===== Overlay Maintenance Mode (tampilan pengunjung) =====
