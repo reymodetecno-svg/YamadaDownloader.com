@@ -19,8 +19,18 @@ export const DEFAULT_MAINTENANCE = {
   message: "Website sedang dalam perbaikan. Silakan coba lagi beberapa saat lagi."
 };
 
+// Website Setting: identitas website yang bisa diubah dari Panel Admin
+// (nama situs, deskripsi/tagline, logo, dan link Customer Service).
+export const DEFAULT_SITE = {
+  name: "YamadaDownloader",
+  description: "YamadaDownloader - download video dari TikTok, Instagram, dan YouTube.",
+  logoUrl: "LOGO.jpg",
+  csLink: "https://wa.me/6283869485575"
+};
+
 const PLATFORMS_KEY = "settings:platforms";
 const MAINTENANCE_KEY = "settings:maintenance";
+const SITE_KEY = "settings:site";
 
 function sanitizeName(name, fallback) {
   const clean = String(name ?? "").trim().slice(0, 40);
@@ -30,6 +40,13 @@ function sanitizeName(name, fallback) {
 function sanitizeMessage(message) {
   const clean = String(message ?? "").trim().slice(0, 500);
   return clean || DEFAULT_MAINTENANCE.message;
+}
+
+// Field pendek dengan panjang custom, dipakai untuk Website Setting
+// (nama, deskripsi, url logo, link CS) — beda field beda batas panjang.
+function sanitizeSiteField(value, fallback, maxLength) {
+  const clean = String(value ?? "").trim().slice(0, maxLength);
+  return clean || fallback;
 }
 
 export async function getPlatformSettings() {
@@ -105,5 +122,36 @@ export async function saveMaintenanceSettings(update) {
   };
 
   await kvSetJSON(MAINTENANCE_KEY, next);
+  return true;
+}
+
+export async function getSiteSettings() {
+  const saved = await kvGetJSON(SITE_KEY, null);
+  if (!saved || typeof saved !== "object") return structuredClone(DEFAULT_SITE);
+
+  return {
+    name: sanitizeSiteField(saved.name, DEFAULT_SITE.name, 60),
+    description: sanitizeSiteField(saved.description, DEFAULT_SITE.description, 160),
+    logoUrl: sanitizeSiteField(saved.logoUrl, DEFAULT_SITE.logoUrl, 300),
+    csLink: sanitizeSiteField(saved.csLink, DEFAULT_SITE.csLink, 300)
+  };
+}
+
+export async function saveSiteSettings(update) {
+  if (!isKvConfigured()) return false;
+
+  const current = await getSiteSettings();
+  const next = {
+    name: update.name !== undefined ? sanitizeSiteField(update.name, DEFAULT_SITE.name, 60) : current.name,
+    description:
+      update.description !== undefined
+        ? sanitizeSiteField(update.description, DEFAULT_SITE.description, 160)
+        : current.description,
+    logoUrl:
+      update.logoUrl !== undefined ? sanitizeSiteField(update.logoUrl, DEFAULT_SITE.logoUrl, 300) : current.logoUrl,
+    csLink: update.csLink !== undefined ? sanitizeSiteField(update.csLink, DEFAULT_SITE.csLink, 300) : current.csLink
+  };
+
+  await kvSetJSON(SITE_KEY, next);
   return true;
 }
